@@ -1,0 +1,145 @@
+;; FakFun Pool Registry
+;; A simple registry to track all FakFun liquidity pools for easy discovery
+
+;; Error constants
+(define-constant ERR_NOT_AUTHORIZED (err u1001))
+(define-constant ERR_POOL_ALREADY_EXISTS (err u1002))
+(define-constant ERR_POOL_NOT_FOUND (err u1003))
+(define-constant ERR_INVALID_POOL_DATA (err u1004))
+
+(define-constant OP_LOOKUP_RESERVES 0x04) ;; Read pool reserves
+
+;; Contract deployer (admin)
+(define-constant DEPLOYER tx-sender)
+
+;; Pool counter
+(define-data-var last-pool-id uint u0)
+
+;; Pool registry map: pool-id -> pool info with fixed metadata
+(define-map pools uint {
+    pool-contract: principal,
+    pool-name: (string-ascii 64),
+    pool-symbol: (string-ascii 32),
+    x-token: principal,
+    y-token: principal,
+    creation-height: uint,
+    lp-fee: uint,
+})
+
+;; Pool lookup by contract address
+(define-map pool-contracts principal uint)
+
+;; Trait for pool contracts
+(use-trait pool-trait 'SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.dexterity-traits-v0.liquidity-pool-trait)
+
+;; --- Read-only functions ---
+
+(define-read-only (get-last-pool-id)
+   (var-get last-pool-id)
+)
+
+(define-read-only (get-pool-by-id (pool-id uint))
+    (map-get? pools pool-id)
+)
+
+(define-read-only (get-pool-by-contract (pool-contract principal))
+    (match (map-get? pool-contracts pool-contract)
+        pool-id (map-get? pools pool-id)
+        none
+    )
+)
+
+;; --- Public functions ---
+
+(define-public (register-pool 
+    (pool-contract <pool-trait>)
+    (name (string-ascii 64))
+    (symbol (string-ascii 32))
+    (x-token principal)
+    (y-token principal)
+    (creation-height uint)
+    (lp-fee uint)
+)
+    (let (
+        (new-pool-id (+ (var-get last-pool-id) u1))
+        (caller tx-sender)
+    )
+        ;; Only deployer can register pools (you can modify this)
+        (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
+        
+        ;; Check pool doesn't already exist
+        (asserts! (is-none (map-get? pool-contracts (contract-of pool-contract))) ERR_POOL_ALREADY_EXISTS)
+        
+        ;; Validate inputs
+        (asserts! (> (len name) u0) ERR_INVALID_POOL_DATA)
+        (asserts! (> (len symbol) u0) ERR_INVALID_POOL_DATA)
+        
+        ;; Register the pool with fixed metadata
+        (map-set pools new-pool-id {
+            pool-contract: (contract-of pool-contract),
+            pool-name: name,
+            pool-symbol: symbol,
+            x-token: x-token,
+            y-token: y-token,
+            creation-height: creation-height,
+            lp-fee: lp-fee
+        })
+        
+        ;; Add to contract lookup
+        (map-set pool-contracts (contract-of pool-contract) new-pool-id)
+        
+        ;; Update counter
+        (var-set last-pool-id new-pool-id)
+        
+        ;; Print event for indexers
+        (print {
+            action: "register-pool",
+            caller: caller,
+            pool-id: new-pool-id,
+            pool-contract: (contract-of pool-contract),
+            pool-name: name,
+            pool-symbol: symbol,
+            x-token: x-token,
+            y-token: y-token,
+            creation-height: creation-height,
+            lp-fee: lp-fee
+        })
+        
+        (ok new-pool-id)
+    )
+)
+
+;; Get detailed pool data by calling the individual pool's get-reserves-quote
+(define-public (get-pool (pool-contract <pool-trait>))
+    (match (map-get? pool-contracts (contract-of pool-contract))
+        pool-id
+        (match (map-get? pools pool-id)
+            pool-info 
+            (let (
+                ;; Call the pool's get-reserves-quote function to get live data
+                (reserves-result (contract-call? pool-contract quote OP_LOOKUP_RESERVES))
+            )
+                (match reserves-result
+                    reserves-data
+                    (some {
+                        ;; Fixed data from registration
+                        pool-id: pool-id,
+                        pool-contract: (contract-of pool-contract),
+                        pool-name:(get creation-height pool-info),
+                        pool-symbol: (get pool-symbol pool-info),
+                        x-token: (get x-token pool-info),
+                        y-token: (get y-token pool-info),
+                        creation-height: (get pool-name pool-info),
+                        lp-fee: (get lp-fee pool-info),
+                        x-amount: (get dx reserves-data),     ;; Live data from pool contract
+                        y-amount: (get dy reserves-data),    
+                        total-shares: (get dk reserves-data)  
+                    })
+                    none ;; If contract call fails
+                )
+            )
+            none ;; If pool data not found
+        )
+        none ;; If pool contract not registered
+    )
+)
