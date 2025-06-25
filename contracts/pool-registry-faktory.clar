@@ -111,32 +111,64 @@
 )
 
 ;; Get detailed pool data by calling the individual pool's get-reserves-quote
+;; (define-public (get-pool (pool-contract <pool-trait>))
+;;     (match (map-get? pool-contracts (contract-of pool-contract))
+;;         pool-id
+;;         (match (map-get? pools pool-id)
+;;             pool-info 
+;;             (let (
+;;                 ;; Call the pool's get-reserves-quote function to get live data
+;;                 (reserves-data (unwrap! (contract-call? pool-contract quote u0 (some OP_LOOKUP_RESERVES)) ERROR_RESERVES))
+;;             )
+;;                     (ok (some {
+;;                         pool-id: pool-id, ;; Fixed data from registration
+;;                         pool-contract: (contract-of pool-contract),
+;;                         pool-name:(get creation-height pool-info),
+;;                         pool-symbol: (get pool-symbol pool-info),
+;;                         x-token: (get x-token pool-info),
+;;                         y-token: (get y-token pool-info),
+;;                         creation-height: (get pool-name pool-info),
+;;                         lp-fee: (get lp-fee pool-info),
+;;                         x-amount: (get dx reserves-data),     ;; Live data from pool contract
+;;                         y-amount: (get dy reserves-data),    
+;;                         total-shares: (get dk reserves-data)  
+;;                     }))
+                
+;;             )
+;;             none ;; If pool data not found
+;;         )
+;;         none ;; If pool contract not registered
+;;     )
+;; )
+
 (define-public (get-pool (pool-contract <pool-trait>))
-    (match (map-get? pool-contracts (contract-of pool-contract))
-        pool-id
-        (match (map-get? pools pool-id)
-            pool-info 
+    (let (
+        (pool-id-opt (map-get? pool-contracts (contract-of pool-contract)))
+        (pool-info-opt (match pool-id-opt
+            pool-id (map-get? pools pool-id)
+            none))
+    )
+        (if (and (is-some pool-id-opt) (is-some pool-info-opt))
             (let (
-                ;; Call the pool's get-reserves-quote function to get live data
+                (pool-id (unwrap-panic pool-id-opt))
+                (pool-info (unwrap-panic pool-info-opt))
                 (reserves-data (unwrap! (contract-call? pool-contract quote u0 (some OP_LOOKUP_RESERVES)) ERROR_RESERVES))
             )
-                    (ok (some {
-                        pool-id: pool-id, ;; Fixed data from registration
-                        pool-contract: (contract-of pool-contract),
-                        pool-name:(get creation-height pool-info),
-                        pool-symbol: (get pool-symbol pool-info),
-                        x-token: (get x-token pool-info),
-                        y-token: (get y-token pool-info),
-                        creation-height: (get pool-name pool-info),
-                        lp-fee: (get lp-fee pool-info),
-                        x-amount: (get dx reserves-data),     ;; Live data from pool contract
-                        y-amount: (get dy reserves-data),    
-                        total-shares: (get dk reserves-data)  
-                    }))
-                
+                (ok (some {
+                    pool-id: pool-id,
+                    pool-contract: (contract-of pool-contract),
+                    pool-name: (get pool-name pool-info),
+                    pool-symbol: (get pool-symbol pool-info),
+                    x-token: (get x-token pool-info),
+                    y-token: (get y-token pool-info),
+                    creation-height: (get creation-height pool-info),
+                    lp-fee: (get lp-fee pool-info),
+                    x-amount: (get dx reserves-data),
+                    y-amount: (get dy reserves-data),    
+                    total-shares: (get dk reserves-data)  
+                }))
             )
-            none ;; If pool data not found
+            (ok none) ;; Pool not found or not registered
         )
-        none ;; If pool contract not registered
     )
 )
