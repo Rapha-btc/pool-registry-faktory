@@ -6,6 +6,7 @@
 (define-constant ERR_POOL_ALREADY_EXISTS (err u1002))
 (define-constant ERR_POOL_NOT_FOUND (err u1003))
 (define-constant ERR_INVALID_POOL_DATA (err u1004))
+(define-constant ERROR_RESERVES (err 1005))
 
 (define-constant OP_LOOKUP_RESERVES 0x04) ;; Read pool reserves
 
@@ -117,13 +118,10 @@
             pool-info 
             (let (
                 ;; Call the pool's get-reserves-quote function to get live data
-                (reserves-result (contract-call? pool-contract quote OP_LOOKUP_RESERVES))
+                (reserves-data (unwrap! (contract-call? pool-contract quote u0 (some OP_LOOKUP_RESERVES)) ERROR_RESERVES))
             )
-                (match reserves-result
-                    reserves-data
-                    (some {
-                        ;; Fixed data from registration
-                        pool-id: pool-id,
+                    (ok (some {
+                        pool-id: pool-id, ;; Fixed data from registration
                         pool-contract: (contract-of pool-contract),
                         pool-name:(get creation-height pool-info),
                         pool-symbol: (get pool-symbol pool-info),
@@ -134,9 +132,8 @@
                         x-amount: (get dx reserves-data),     ;; Live data from pool contract
                         y-amount: (get dy reserves-data),    
                         total-shares: (get dk reserves-data)  
-                    })
-                    none ;; If contract call fails
-                )
+                    }))
+                
             )
             none ;; If pool data not found
         )
