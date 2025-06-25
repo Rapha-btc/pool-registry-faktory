@@ -110,6 +110,56 @@
     )
 )
 
+(define-public (edit-pool
+    (pool-id uint)
+    (pool-contract <pool-trait>)
+    (name (string-ascii 64))
+    (symbol (string-ascii 32))
+    (x-token principal)
+    (y-token principal)
+    (creation-height uint)
+    (lp-fee uint)
+)
+    (let (
+        (caller tx-sender)
+        (existing-pool (unwrap! (map-get? pools pool-id) ERR_POOL_NOT_FOUND))
+    )
+        ;; Only deployer can edit pools
+        (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
+        
+        ;; Validate inputs
+        (asserts! (> (len name) u0) ERR_INVALID_POOL_DATA)
+        (asserts! (> (len symbol) u0) ERR_INVALID_POOL_DATA)
+        
+        ;; Update the pool with new metadata (keep the same pool-contract)
+        (map-set pools pool-id {
+            pool-contract: (contract-of pool-contract),
+            pool-name: name,
+            pool-symbol: symbol,
+            x-token: x-token,
+            y-token: y-token,
+            creation-height: creation-height,
+            lp-fee: lp-fee
+        })
+        
+        ;; Print event for indexers
+        (print {
+            action: "edit-pool",
+            caller: caller,
+            pool-id: pool-id,
+            pool-contract: (contract-of pool-contract),
+            pool-name: name,
+            pool-symbol: symbol,
+            x-token: x-token,
+            y-token: y-token,
+            creation-height: creation-height,
+            lp-fee: lp-fee
+        })
+        
+        (ok pool-id)
+    )
+)
+
 (define-public (get-pool (pool-contract <pool-trait>))
     (let (
             (pool-id (map-get? pool-contracts (contract-of pool-contract)))
