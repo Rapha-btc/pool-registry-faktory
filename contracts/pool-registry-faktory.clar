@@ -110,59 +110,28 @@
     )
 )
 
-;; Get detailed pool data by calling the individual pool's get-reserves-quote
-;; (define-public (get-pool (pool-contract <pool-trait>))
-;;     (match (map-get? pool-contracts (contract-of pool-contract))
-;;         pool-id
-;;         (match (map-get? pools pool-id)
-;;             pool-info 
-;;             (let (
-;;                 ;; Call the pool's get-reserves-quote function to get live data
-;;                 (reserves-data (unwrap! (contract-call? pool-contract quote u0 (some OP_LOOKUP_RESERVES)) ERROR_RESERVES))
-;;             )
-;;                     (ok (some {
-;;                         pool-id: pool-id, ;; Fixed data from registration
-;;                         pool-contract: (contract-of pool-contract),
-;;                         pool-name:(get creation-height pool-info),
-;;                         pool-symbol: (get pool-symbol pool-info),
-;;                         x-token: (get x-token pool-info),
-;;                         y-token: (get y-token pool-info),
-;;                         creation-height: (get pool-name pool-info),
-;;                         lp-fee: (get lp-fee pool-info),
-;;                         x-amount: (get dx reserves-data),     ;; Live data from pool contract
-;;                         y-amount: (get dy reserves-data),    
-;;                         total-shares: (get dk reserves-data)  
-;;                     }))
-                
-;;             )
-;;             none ;; If pool data not found
-;;         )
-;;         none ;; If pool contract not registered
-;;     )
-;; )
-
 (define-public (get-pool (pool-contract <pool-trait>))
     (let (
-        (pool-id-opt (map-get? pool-contracts (contract-of pool-contract)))
-        (pool-info-opt (match pool-id-opt
-            pool-id (map-get? pools pool-id)
-            none))
-    )
-        (if (and (is-some pool-id-opt) (is-some pool-info-opt))
+            (pool-id (map-get? pool-contracts (contract-of pool-contract)))
+            (pool-info (match pool-id
+                                id (map-get? pools id)
+                                none))
+          )
+        (if (and (is-some pool-id) (is-some pool-info))
             (let (
-                (pool-id (unwrap-panic pool-id-opt))
-                (pool-info (unwrap-panic pool-info-opt))
+                (id (unwrap-panic pool-id))
+                (info (unwrap-panic pool-info))
                 (reserves-data (unwrap! (contract-call? pool-contract quote u0 (some OP_LOOKUP_RESERVES)) ERROR_RESERVES))
             )
                 (ok (some {
-                    pool-id: pool-id,
+                    pool-id: id,
                     pool-contract: (contract-of pool-contract),
-                    pool-name: (get pool-name pool-info),
-                    pool-symbol: (get pool-symbol pool-info),
-                    x-token: (get x-token pool-info),
-                    y-token: (get y-token pool-info),
-                    creation-height: (get creation-height pool-info),
-                    lp-fee: (get lp-fee pool-info),
+                    pool-name: (get pool-name info),
+                    pool-symbol: (get pool-symbol info),
+                    x-token: (get x-token info),
+                    y-token: (get y-token info),
+                    creation-height: (get creation-height info),
+                    lp-fee: (get lp-fee info),
                     x-amount: (get dx reserves-data),
                     y-amount: (get dy reserves-data),    
                     total-shares: (get dk reserves-data)  
