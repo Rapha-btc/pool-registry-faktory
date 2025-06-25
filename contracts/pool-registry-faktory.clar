@@ -1,5 +1,5 @@
 ;; FakFun Pool Registry
-;; A simple registry to track all FakFun liquidity pools for easy discovery
+;; A simple registry to track all FakFun and Charisma liquidity pools for easy discovery
 
 ;; Error constants
 (define-constant ERR_NOT_AUTHORIZED (err u1001))
@@ -25,6 +25,7 @@
     y-token: principal,
     creation-height: uint,
     lp-fee: uint,
+    pool-uri: (string-utf8 256),
 })
 
 ;; Pool lookup by contract address
@@ -60,9 +61,11 @@
     (y-token principal)
     (creation-height uint)
     (lp-fee uint)
+    (pool-uri (optional (string-utf8 256)))
 )
     (let (
         (new-pool-id (+ (var-get last-pool-id) u1))
+        (uri (default-to u"https://faktory.fun/" pool-uri))
         (caller tx-sender)
     )
         ;; Only deployer can register pools (you can modify this)
@@ -83,7 +86,8 @@
             x-token: x-token,
             y-token: y-token,
             creation-height: creation-height,
-            lp-fee: lp-fee
+            lp-fee: lp-fee,
+            pool-uri: uri
         })
         
         ;; Add to contract lookup
@@ -103,7 +107,8 @@
             x-token: x-token,
             y-token: y-token,
             creation-height: creation-height,
-            lp-fee: lp-fee
+            lp-fee: lp-fee,
+            pool-uri: uri
         })
         
         (ok new-pool-id)
@@ -119,10 +124,12 @@
     (y-token principal)
     (creation-height uint)
     (lp-fee uint)
+    (pool-uri (optional (string-utf8 256)))
 )
     (let (
         (caller tx-sender)
         (existing-pool (unwrap! (map-get? pools pool-id) ERR_POOL_NOT_FOUND))
+        (uri (default-to u"https://faktory.fun/" pool-uri))
     )
         ;; Only deployer can edit pools
         (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
@@ -131,7 +138,7 @@
         (asserts! (> (len name) u0) ERR_INVALID_POOL_DATA)
         (asserts! (> (len symbol) u0) ERR_INVALID_POOL_DATA)
         
-        ;; Update the pool with new metadata (keep the same pool-contract)
+        ;; Update the pool with new metadata
         (map-set pools pool-id {
             pool-contract: (contract-of pool-contract),
             pool-name: name,
@@ -139,7 +146,8 @@
             x-token: x-token,
             y-token: y-token,
             creation-height: creation-height,
-            lp-fee: lp-fee
+            lp-fee: lp-fee,
+            pool-uri: uri
         })
         
         ;; Print event for indexers
@@ -153,7 +161,8 @@
             x-token: x-token,
             y-token: y-token,
             creation-height: creation-height,
-            lp-fee: lp-fee
+            lp-fee: lp-fee,
+            pool-uri: uri
         })
         
         (ok pool-id)
@@ -182,6 +191,7 @@
                     y-token: (get y-token info),
                     creation-height: (get creation-height info),
                     lp-fee: (get lp-fee info),
+                    pool-uri: (get pool-uri info),
                     x-amount: (get dx reserves-data),
                     y-amount: (get dy reserves-data),    
                     total-shares: (get dk reserves-data)  
