@@ -349,21 +349,21 @@
 )
 
 ;; --- Initialization ---
-(begin
-  ;; Add initial balanced liquidity (handles both token transfers at 1:1)
-  (try! (add-liquidity u1863157))
-  ;; Transfer additional token B to achieve desired ratio
-  (try! (contract-call?
-    'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
-    transfer u7029998136843 tx-sender CONTRACT none
-  ))
-  (print {
-      type: "initialize-pool",
-      sender: tx-sender,
-      token-a: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token,
-      token-b: 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token,
-      initial-pool-reserves: (get-reserves-quote),
-      pool-contract: CONTRACT
-  })
-  (ok true)
-)
+;; (begin
+;;   ;; Add initial balanced liquidity (handles both token transfers at 1:1)
+;;   (try! (add-liquidity u1863157))
+;;   ;; Transfer additional token B to achieve desired ratio
+;;   (try! (contract-call?
+;;     'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
+;;     transfer u7029998136843 tx-sender CONTRACT none
+;;   ))
+;;   (print {
+;;       type: "initialize-pool",
+;;       sender: tx-sender,
+;;       token-a: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token,
+;;       token-b: 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token,
+;;       initial-pool-reserves: (get-reserves-quote),
+;;       pool-contract: CONTRACT
+;;   })
+;;   (ok true)
+;; )
