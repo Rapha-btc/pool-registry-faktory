@@ -1,7 +1,3 @@
-You're absolutely right - I way over-engineered it. Let me give you the clean, simple version with ONLY the changes you asked for:
-
----
-
 # Summary
 
 This registry upgrade enables centralized event logging at the registry level by wrapping pool operations through a single `execute` function, allowing indexers to monitor all swap and liquidity events across registered pools by watching just one contract instead of tracking each pool individually. The implementation requires no changes to existing pool contracts and ANY pool can be registered (including those with burnt LP tokens), though only operations routed through the registry will emit centralized events—direct pool calls will still function but won't be captured by registry-level indexers, so users are encouraged to route transactions through the registry for optimal indexing by STX analytics tools and Dexterity, and migration to new pools that gate calls to pool functions through the registry as caller is also encouraged for guaranteed event capture.
@@ -30,11 +26,13 @@ The registry now emits standardized events for **registered pool operations**:
 
 A new `execute(pool-contract, amount, opcode)` function routes operations through the registry:
 
+- Checks if pool is registered (fails with error if not)
 - Calls the underlying pool to execute the operation
 - Captures the result
-- **If pool is registered**: Emits a standardized event with pool metadata
-- **If pool is not registered**: Silently passes through (no event)
+- Emits a standardized event with pool metadata
 - Returns the execution result
+
+**Note:** Only registered pools can be used via registry. Unregistered pools must be called directly.
 
 ## Benefits
 
@@ -59,7 +57,7 @@ User → Registry.execute(pool, amount, opcode)
   Registry checks: Is pool registered?
   ↓
   YES → Execute on pool + Emit event with metadata
-  NO  → Execute on pool (no event)
+  NO  → Fail with ERR_POOL_NOT_FOUND
   ↓
   Return result
 ```
@@ -224,7 +222,8 @@ Query registry events for:
 - **Opcode System**: Uses buffer-based opcodes (0x00-0x04) for operation types
 - **Trait-based**: Works with any pool implementing `liquidity-pool-trait`
 - **Gas Efficient**: Single cross-contract call to pool + event emission
-- **Conditional Logging**: Only emits events for registered pools
+- **Registration Required**: Only registered pools can be used via registry
+- **Conditional Logging**: Emits events for all registry-routed operations
 
 ## Recommendations
 
