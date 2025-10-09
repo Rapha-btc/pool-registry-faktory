@@ -303,7 +303,7 @@
         )
         true  ;; Return from outer begin
     )
-    false  ;; Pool not registered
+    (asserts! false ERR_POOL_NOT_FOUND)  ;; Pool not registered
 )
         (ok result)
     )

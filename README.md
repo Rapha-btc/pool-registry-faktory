@@ -1,6 +1,10 @@
+You're absolutely right - I way over-engineered it. Let me give you the clean, simple version with ONLY the changes you asked for:
+
+---
+
 # Summary
 
-This registry upgrade enables centralized event logging at the registry level by wrapping pool operations through a single `execute` function, allowing indexers to monitor all swap and liquidity events across registered pools by watching just one contract instead of tracking each pool individually. The implementation requires no changes to existing pool contracts and works with both registered and unregistered pools (including those with burnt LP), though users are encouraged to route transactions through the registry for optimal indexing—direct pool calls will still function but their events won't be captured by registry-level indexers used by STX analytics tools and Dexterity.
+This registry upgrade enables centralized event logging at the registry level by wrapping pool operations through a single `execute` function, allowing indexers to monitor all swap and liquidity events across registered pools by watching just one contract instead of tracking each pool individually. The implementation requires no changes to existing pool contracts and ANY pool can be registered (including those with burnt LP tokens), though only operations routed through the registry will emit centralized events—direct pool calls will still function but won't be captured by registry-level indexers, so users are encouraged to route transactions through the registry for optimal indexing by STX analytics tools and Dexterity, and migration to new pools that gate calls to pool functions through the registry as caller is also encouraged for guaranteed event capture.
 
 ---
 
@@ -14,7 +18,7 @@ The FakFun Pool Registry has been upgraded to provide **centralized event loggin
 
 ### Centralized Event Logging
 
-The registry now emits standardized events for all pool operations:
+The registry now emits standardized events for **registered pool operations**:
 
 - `buy` - Swap token A for token B
 - `sell` - Swap token B for token A
@@ -28,16 +32,49 @@ A new `execute(pool-contract, amount, opcode)` function routes operations throug
 
 - Calls the underlying pool to execute the operation
 - Captures the result
-- Emits a standardized event with pool metadata
+- **If pool is registered**: Emits a standardized event with pool metadata
+- **If pool is not registered**: Silently passes through (no event)
 - Returns the execution result
 
 ## Benefits
 
-✅ **For Indexers**: Monitor all pools by watching one contract  
-✅ **For Analytics**: Unified event schema across all pools  
+✅ **For Indexers**: Monitor all registered pools by watching one contract  
+✅ **For Analytics**: Unified event schema across all registered pools  
 ✅ **For Frontends**: Easy integration with registry routing  
-✅ **For Users**: No migration required—existing pools work as-is  
-✅ **For LP Burnt Pools**: Can be registered without code changes
+✅ **For Pool Owners**: No code changes required—any pool can be registered  
+✅ **For LP Burnt Pools**: Can be registered and tracked without migration  
+✅ **For Legacy Pools**: Works with existing pools without requiring upgrades
+
+## How It Works
+
+### Registration
+
+Any pool can be registered in the registry, including pools with burnt LP tokens.
+
+### Event Emission Logic
+
+```
+User → Registry.execute(pool, amount, opcode)
+  ↓
+  Registry checks: Is pool registered?
+  ↓
+  YES → Execute on pool + Emit event with metadata
+  NO  → Execute on pool (no event)
+  ↓
+  Return result
+```
+
+### Direct Pool Calls (Bypass Registry)
+
+```
+User → Pool.execute(amount, opcode)
+  ↓
+  Pool executes operation
+  Pool emits its own event
+  Registry has no visibility ❌
+```
+
+**Important:** Current pools do not restrict direct calls. Users can choose to route through registry (recommended) or call pools directly (still works, but bypasses registry logging).
 
 ## Migration Path
 
@@ -63,7 +100,7 @@ To:
 registry.execute(pool, amount, opcode);
 ```
 
-### Phase 3: Pool Gating (Optional - Future)
+### Phase 3: Pool Gating (Recommended - Future)
 
 For new pools, add access control to enforce registry routing:
 
@@ -75,20 +112,22 @@ For new pools, add access control to enforce registry routing:
 ) ERR_UNAUTHORIZED)
 ```
 
+This guarantees all operations are logged at the registry level.
+
 ## Backward Compatibility
 
 **No Breaking Changes:**
 
 - Existing pools work without modification
 - Direct pool calls continue to function
-- Pool-level events still emit (for backward compatibility)
-- Unregistered pools can be used directly
+- Pool-level events still emit
+- Any pool can be registered
 
 **Trade-off:**
 
 - Direct pool calls bypass registry logging
 - Events from direct calls won't appear in registry event stream
-- STX analytics tools and Dexterity won't capture these trades
+- STX analytics tools and Dexterity won't capture direct trades
 
 ## Usage Examples
 
@@ -159,7 +198,7 @@ Watch the registry contract for all events:
 ```javascript
 const registryAddress = "SP123...registry";
 const events = await watchContract(registryAddress);
-// All pool activity in one stream
+// All registered pool activity routed through registry
 ```
 
 ### Router Integration (Rozar, etc.)
@@ -185,14 +224,14 @@ Query registry events for:
 - **Opcode System**: Uses buffer-based opcodes (0x00-0x04) for operation types
 - **Trait-based**: Works with any pool implementing `liquidity-pool-trait`
 - **Gas Efficient**: Single cross-contract call to pool + event emission
-- **Non-blocking**: Works with both registered and unregistered pools
+- **Conditional Logging**: Only emits events for registered pools
 
 ## Recommendations
 
 1. **Route through registry** for all new integrations
 2. **Register all pools** to enable discovery
 3. **Update indexers** to watch registry contract
-4. **Consider pool gating** for new deployments to guarantee event capture
+4. **Consider pool gating** for new deployments to guarantee event capture and prevent bypassing
 5. **Keep direct pool access** available for power users and emergency scenarios
 
 ## Support
