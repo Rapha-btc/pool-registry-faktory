@@ -231,37 +231,60 @@
     )
         ;; Emit appropriate event based on operation
         (match pool-info
-            info (begin
-                (if (is-eq operation OP_SWAP_A_TO_B)
-                    ;; Buy event
+    info (begin
+        (if (is-eq operation OP_SWAP_A_TO_B)
+            ;; Buy event
+            (begin
+                (print {
+                    type: "buy",
+                    sender: sender,
+                    token-in: (get x-token info),
+                    amount-in: amount,
+                    token-out: (get y-token info),
+                    amount-out: (get dy result),
+                    pool-reserves: reserves-after,
+                    pool-contract: (contract-of pool-contract),
+                    min-y-out: u0
+                })
+                true
+            )
+            (if (is-eq operation OP_SWAP_B_TO_A)
+                ;; Sell event
+                (begin
                     (print {
-                        type: "buy", ;; except for USDA?
+                        type: "sell",
                         sender: sender,
-                        token-in: (get x-token info),
+                        token-in: (get y-token info),
                         amount-in: amount,
-                        token-out: (get y-token info),
+                        token-out: (get x-token info),
                         amount-out: (get dy result),
                         pool-reserves: reserves-after,
                         pool-contract: (contract-of pool-contract),
                         min-y-out: u0
                     })
-                    (if (is-eq operation OP_SWAP_B_TO_A)
-                        ;; Sell event
+                    true
+                )
+                (if (is-eq operation OP_ADD_LIQUIDITY)
+                    ;; Add liquidity event
+                    (begin
                         (print {
-                            type: "sell", ;; except for USDA?
+                            type: "add-liquidity",
                             sender: sender,
-                            token-in: (get y-token info),
-                            amount-in: amount,
-                            token-out: (get x-token info),
-                            amount-out: (get dy result),
+                            token-a: (get x-token info),
+                            token-a-amount: (get dx result),
+                            token-b: (get y-token info),
+                            token-b-amount: (get dy result),
+                            lp-tokens: (get dk result),
                             pool-reserves: reserves-after,
-                            pool-contract: (contract-of pool-contract),
-                            min-y-out: u0
+                            pool-contract: (contract-of pool-contract)
                         })
-                        (if (is-eq operation OP_ADD_LIQUIDITY)
-                            ;; Add liquidity event
+                        true
+                    )
+                    (if (is-eq operation OP_REMOVE_LIQUIDITY)
+                        ;; Remove liquidity event
+                        (begin
                             (print {
-                                type: "add-liquidity",
+                                type: "remove-liquidity",
                                 sender: sender,
                                 token-a: (get x-token info),
                                 token-a-amount: (get dx result),
@@ -271,28 +294,17 @@
                                 pool-reserves: reserves-after,
                                 pool-contract: (contract-of pool-contract)
                             })
-                            (if (is-eq operation OP_REMOVE_LIQUIDITY)
-                                ;; Remove liquidity event
-                                (print {
-                                    type: "remove-liquidity",
-                                    sender: sender,
-                                    token-a: (get x-token info),
-                                    token-a-amount: (get dx result),
-                                    token-b: (get y-token info),
-                                    token-b-amount: (get dy result),
-                                    lp-tokens: (get dk result),
-                                    pool-reserves: reserves-after,
-                                    pool-contract: (contract-of pool-contract)
-                                })
-                                false  ;; Unknown operation
-                            )
+                            true
                         )
+                        true  ;; Unknown operation
                     )
                 )
-                true
             )
-            false  ;; Pool not registered, just pass through
         )
+        true  ;; Return from outer begin
+    )
+    false  ;; Pool not registered
+)
         (ok result)
     )
 )
