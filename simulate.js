@@ -346,9 +346,10 @@ SimulationBuilder.new()
   })
 
   // ===== EXECUTE OPERATIONS - HAPPY PATH =====
-  // We'll demonstrate all 4 operations on LEO pool to show they work
+  // We'll demonstrate all 4 operations with proper setup
 
   // OPERATION 1: Buy LEO tokens (OP_SWAP_A_TO_B)
+  // User has sBTC, buys LEO
   .withSender(SBTC_USER_1)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
@@ -364,7 +365,7 @@ SimulationBuilder.new()
   })
 
   // OPERATION 2: Sell LEO tokens (OP_SWAP_B_TO_A)
-  // User now has LEO tokens from previous buy, can sell them
+  // User now has LEO tokens from previous buy, can sell them back
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -379,6 +380,7 @@ SimulationBuilder.new()
   })
 
   // OPERATION 3: Add liquidity (OP_ADD_LIQUIDITY)
+  // First, user needs to buy B tokens so they have both B and sBTC
   .withSender(SBTC_USER_2)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
@@ -388,7 +390,20 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "b-faktory-pool"
       ),
-      uintCV(500000),
+      uintCV(500000), // Buy B tokens with sBTC first
+      someCV(OP_SWAP_A_TO_B),
+    ],
+  })
+  // Now user has both B tokens and sBTC, can add liquidity
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      uintCV(500000), // Amount of sBTC to add (pool will calculate B amount)
       someCV(OP_ADD_LIQUIDITY),
     ],
   })
