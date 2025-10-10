@@ -1,4 +1,4 @@
-````markdown
+
 # Summary
 
 This registry upgrade enables centralized event logging at the registry level by wrapping pool operations through a single `execute` function, allowing indexers to monitor all swap and liquidity events across registered pools by watching just one contract instead of tracking each pool individually. The implementation requires no changes to existing pool contracts and ANY pool can be registered (including those with burnt LP tokens), though only operations routed through the registry will emit centralized events—direct pool calls will still function but won't be captured by registry-level indexers, so users are encouraged to route transactions through the registry for optimal indexing by STX analytics tools and Dexterity, and migration to new pools that gate calls to pool functions through the registry as caller is also encouraged for guaranteed event capture.
@@ -83,7 +83,7 @@ if (eventTokens !== actualPool.x_token) {
   console.warn("Registry metadata mismatch detected");
 }
 ```
-````
+
 
 For critical operations, always cross-reference registry data with direct pool queries.
 
