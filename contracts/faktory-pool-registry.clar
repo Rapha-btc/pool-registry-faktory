@@ -117,7 +117,7 @@
             pool-uri: uri,
             x-amount: (get dx reserves-data),
             y-amount: (get dy reserves-data),    
-            total-shares: (get dk reserves-data)          })
+            total-shares: (get dk reserves-data) })
         
         (ok new-pool-id)
     )

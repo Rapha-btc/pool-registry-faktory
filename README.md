@@ -242,3 +242,7 @@ For questions or issues with the registry upgrade, please contact the Faktory te
 **Version**: 2.0  
 **Deployed**: [Add deployment date]  
 **Contract**: [Add registry contract address]
+
+npm install stxer @stacks/transactions
+
+node simulate.js
