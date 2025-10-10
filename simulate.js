@@ -499,3 +499,5 @@ Total: 4 pools registered, all operations demonstrated successfully!
 // https://stxer.xyz/simulations/mainnet/762670e04f90a2095e982c51efd62b86
 
 // all green https://stxer.xyz/simulations/mainnet/4539a6ffebcda3cb2417ac4192c94a94
+
+// https://stxer.xyz/simulations/mainnet/2b6c08fefccc690463508ced610ac6ce
