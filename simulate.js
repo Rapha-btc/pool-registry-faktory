@@ -1,7 +1,8 @@
 /*
-## Pool Registry Stxer Simulation
+## Pool Registry Stxer Simulation - HAPPY PATH
 
-This simulation tests the pool registry contract which manages FakFun and Charisma liquidity pools.
+This simulation tests the pool registry contract with realistic scenarios.
+We'll register 4 real pools and execute operations on each with proper setup.
 
 ## Installation and Setup
 
@@ -10,18 +11,10 @@ This simulation tests the pool registry contract which manages FakFun and Charis
 
 2. Add "type": "module" to your package.json
 
-3. Save this as simulate-registry.js
+3. Save this as simulate.js
 
 4. Run the simulation:
-   node simulate-registry.js
-
-## What this tests:
-- Deploying the pool registry
-- Registering pools (authorized and unauthorized)
-- Editing pool metadata
-- Looking up pools by ID and contract address
-- Executing operations through the registry (swaps, liquidity)
-- Error handling for duplicate pools, unauthorized access, etc.
+   node simulate.js
 */
 
 import fs from "node:fs";
@@ -38,20 +31,24 @@ import {
 } from "@stacks/transactions";
 import { SimulationBuilder } from "stxer";
 
-// Define addresses
+// Define addresses - using users that actually have sBTC
 const DEPLOYER = "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM";
-const USER_1 = "SP2QGMXH21KFDX99PWNB7Z7WNQ92TWFAECEEK10GE";
-const USER_2 = "SP3GS0VZBE15D528128G7FN3HXJQ20BXCG4CNPG64";
-const POOL_DEPLOYER = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22";
+const SBTC_USER_1 = "SP2QGMXH21KFDX99PWNB7Z7WNQ92TWFAECEEK10GE"; // Has sBTC
+const SBTC_USER_2 = "SP3GS0VZBE15D528128G7FN3HXJQ20BXCG4CNPG64"; // Has sBTC
+const SBTC_USER_3 = "SP2YS61K9JB3AR06S68JVFMFY4NFBE71EVF9T0R02"; // Has sBTC
+const RANDOM_USER = "SP1K1A1PMGW2ZJCNF46NWZWHG8TS1D23EGH1KNK60"; // Random user
 
-// Pool contract addresses (using real deployed pools as examples)
-const POOL_1 = `${POOL_DEPLOYER}.bob-faktory-pool`;
-const POOL_2 = `${POOL_DEPLOYER}.another-faktory-pool`;
+// Real deployed pool contracts
+const LEO_POOL = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.leo-faktory-pool";
+const B_POOL = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool";
+const SBTC_POOL =
+  "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.sbtc-fakfun-amm-lp-v1";
+const PEPE_POOL = "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool";
+const BOB_POOL = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.bob-faktory-pool"; // For unregistered test
 
 // Token addresses
-const TOKEN_X =
-  "SP2VG7S0R4Z8PYNYCAQ04HCBX1MH75VT11VXCWQ6G.built-on-bitcoin-stxcity";
-const TOKEN_Y = `${DEPLOYER}.sbtc-token`;
+const TOKEN_X = "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx";
+const TOKEN_Y = "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wleo";
 
 // Opcodes
 const OP_SWAP_A_TO_B = bufferCV(Buffer.from([0x00]));
@@ -72,39 +69,105 @@ SimulationBuilder.new()
     clarity_version: ClarityVersion.Clarity3,
   })
 
-  // Check initial state - should have no pools
+  // Check initial state
   .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-last-pool-id)")
 
-  // ===== POOL REGISTRATION =====
+  // ===== REGISTER 4 REAL POOLS =====
 
-  // TEST 1: Register first pool (should succeed - deployer is authorized)
+  // Register LEO pool
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      stringAsciiCV("BOB-sBTC LP"),
-      stringAsciiCV("BOB-SBTC"),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
-      uintCV(150000), // creation-height
-      uintCV(30), // lp-fee (0.30%)
-      someCV(stringUtf8CV("https://faktory.fun/pool/bob-sbtc")),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      stringAsciiCV("LEO-STX LP"),
+      stringAsciiCV("LEO-STX"),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wleo"),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx"),
+      uintCV(150000),
+      uintCV(30),
+      someCV(stringUtf8CV("https://faktory.fun/pool/leo")),
     ],
   })
 
-  // Check pool was registered
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-last-pool-id)")
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-pool-by-id u1)")
-
-  // TEST 2: Try to register same pool again (should fail - ERR_POOL_ALREADY_EXISTS)
+  // Register B pool
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      stringAsciiCV("BOB-sBTC LP Duplicate"),
-      stringAsciiCV("BOB-SBTC-2"),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      stringAsciiCV("B-STX LP"),
+      stringAsciiCV("B-STX"),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wb"),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx"),
+      uintCV(150100),
+      uintCV(30),
+      someCV(stringUtf8CV("https://faktory.fun/pool/b")),
+    ],
+  })
+
+  // Register sBTC pool
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "register-pool",
+    function_args: [
+      contractPrincipalCV(
+        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
+        "sbtc-fakfun-amm-lp-v1"
+      ),
+      stringAsciiCV("sBTC-FakFun LP"),
+      stringAsciiCV("SBTC-FAK"),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wsbtc"),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-fakfun"),
+      uintCV(150200),
+      uintCV(25),
+      someCV(stringUtf8CV("https://faktory.fun/pool/sbtc")),
+    ],
+  })
+
+  // Register PEPE pool
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "register-pool",
+    function_args: [
+      contractPrincipalCV(
+        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
+        "pepe-faktory-pool"
+      ),
+      stringAsciiCV("PEPE-STX LP"),
+      stringAsciiCV("PEPE-STX"),
+      principalCV(
+        "SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4kx15t9102"
+      ),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx"),
+      uintCV(150300),
+      uintCV(30),
+      someCV(stringUtf8CV("https://faktory.fun/pool/pepe")),
+    ],
+  })
+
+  // Check all pools registered
+  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-last-pool-id)")
+
+  // ===== ERROR TESTS =====
+
+  // TEST: Duplicate registration
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "register-pool",
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      stringAsciiCV("LEO Duplicate"),
+      stringAsciiCV("LEO-DUP"),
       principalCV(TOKEN_X),
       principalCV(TOKEN_Y),
       uintCV(150000),
@@ -113,15 +176,18 @@ SimulationBuilder.new()
     ],
   })
 
-  // TEST 3: Non-deployer tries to register pool (should fail - ERR_NOT_AUTHORIZED)
-  .withSender(USER_1)
+  // TEST: Unauthorized registration
+  .withSender(RANDOM_USER)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "another-faktory-pool"),
-      stringAsciiCV("Another Pool"),
-      stringAsciiCV("ANOTHER"),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      stringAsciiCV("Fake Pool"),
+      stringAsciiCV("FAKE"),
       principalCV(TOKEN_X),
       principalCV(TOKEN_Y),
       uintCV(150100),
@@ -130,15 +196,18 @@ SimulationBuilder.new()
     ],
   })
 
-  // TEST 4: Register second pool with empty name (should fail - ERR_INVALID_POOL_DATA)
+  // TEST: Empty name validation
   .withSender(DEPLOYER)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "another-faktory-pool"),
-      stringAsciiCV(""), // Empty name
-      stringAsciiCV("ANOTHER"),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      stringAsciiCV(""),
+      stringAsciiCV("TEST"),
       principalCV(TOKEN_X),
       principalCV(TOKEN_Y),
       uintCV(150100),
@@ -147,14 +216,17 @@ SimulationBuilder.new()
     ],
   })
 
-  // TEST 5: Register second pool with empty symbol (should fail - ERR_INVALID_POOL_DATA)
+  // TEST: Empty symbol validation
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "another-faktory-pool"),
-      stringAsciiCV("Another Pool"),
-      stringAsciiCV(""), // Empty symbol
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      stringAsciiCV("Test Pool"),
+      stringAsciiCV(""),
       principalCV(TOKEN_X),
       principalCV(TOKEN_Y),
       uintCV(150100),
@@ -163,75 +235,41 @@ SimulationBuilder.new()
     ],
   })
 
-  // TEST 6: Register second pool properly (should succeed)
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "register-pool",
-    function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "another-faktory-pool"),
-      stringAsciiCV("FUN-sBTC LP"),
-      stringAsciiCV("FUN-SBTC"),
-      principalCV(TOKEN_Y),
-      principalCV(TOKEN_X),
-      uintCV(150200),
-      uintCV(25),
-      noneCV(), // Will use default URI
-    ],
-  })
+  // ===== EDIT POOL TESTS =====
 
-  // Check second pool was registered
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-last-pool-id)")
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-pool-by-id u2)")
-
-  // ===== POOL LOOKUP TESTS =====
-
-  // TEST 7: Look up pool by contract address
-  .addEvalCode(
-    `${DEPLOYER}.faktory-pool-registry`,
-    `(get-pool-by-contract '${POOL_1})`
-  )
-
-  // TEST 8: Look up non-existent pool (should return none)
-  .addEvalCode(
-    `${DEPLOYER}.faktory-pool-registry`,
-    `(get-pool-by-contract '${DEPLOYER}.nonexistent-pool)`
-  )
-
-  // TEST 9: Look up non-existent pool ID (should return none)
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-pool-by-id u999)")
-
-  // ===== POOL EDITING TESTS =====
-
-  // TEST 10: Edit pool metadata (should succeed - deployer is authorized)
+  // TEST: Edit pool successfully
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "edit-pool",
     function_args: [
       uintCV(1),
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      stringAsciiCV("BOB-sBTC LP v2"),
-      stringAsciiCV("BOB-SBTC-V2"),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      stringAsciiCV("LEO-STX LP v2"),
+      stringAsciiCV("LEO-STX-V2"),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wleo"),
+      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx"),
       uintCV(150000),
-      uintCV(35), // Changed fee
-      someCV(stringUtf8CV("https://faktory.fun/pool/bob-sbtc-v2")),
+      uintCV(35),
+      someCV(stringUtf8CV("https://faktory.fun/pool/leo-v2")),
     ],
   })
 
-  // Check pool was edited
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-pool-by-id u1)")
-
-  // TEST 11: Non-deployer tries to edit pool (should fail - ERR_NOT_AUTHORIZED)
-  .withSender(USER_2)
+  // TEST: Unauthorized edit
+  .withSender(RANDOM_USER)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "edit-pool",
     function_args: [
       uintCV(1),
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      stringAsciiCV("Hacked Pool"),
-      stringAsciiCV("HACKED"),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      stringAsciiCV("Hacked"),
+      stringAsciiCV("HACK"),
       principalCV(TOKEN_X),
       principalCV(TOKEN_Y),
       uintCV(150000),
@@ -240,14 +278,17 @@ SimulationBuilder.new()
     ],
   })
 
-  // TEST 12: Edit non-existent pool (should fail - ERR_POOL_NOT_FOUND)
+  // TEST: Edit non-existent pool
   .withSender(DEPLOYER)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "edit-pool",
     function_args: [
       uintCV(999),
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
       stringAsciiCV("Ghost Pool"),
       stringAsciiCV("GHOST"),
       principalCV(TOKEN_X),
@@ -258,15 +299,18 @@ SimulationBuilder.new()
     ],
   })
 
-  // TEST 13: Edit with empty name (should fail - ERR_INVALID_POOL_DATA)
+  // TEST: Edit with empty name
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "edit-pool",
     function_args: [
       uintCV(1),
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      stringAsciiCV(""), // Empty name
-      stringAsciiCV("BOB-SBTC"),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      stringAsciiCV(""),
+      stringAsciiCV("LEO-STX"),
       principalCV(TOKEN_X),
       principalCV(TOKEN_Y),
       uintCV(150000),
@@ -275,133 +319,174 @@ SimulationBuilder.new()
     ],
   })
 
-  // ===== GET-POOL FUNCTION TESTS =====
+  // ===== GET-POOL TESTS =====
 
-  // TEST 14: Get pool with reserves using get-pool function
+  // Get LEO pool with reserves
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "get-pool",
-    function_args: [contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool")],
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+    ],
   })
 
-  // TEST 15: Get non-existent pool (should return (ok none))
+  // Get B pool with reserves
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "get-pool",
-    function_args: [contractPrincipalCV(DEPLOYER, "nonexistent-pool")],
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+    ],
   })
 
-  // ===== EXECUTE FUNCTION TESTS =====
+  // ===== EXECUTE OPERATIONS - HAPPY PATH =====
+  // We'll demonstrate all 4 operations on LEO pool to show they work
 
-  // TEST 16: Execute swap A to B through registry
-  .withSender(USER_1)
+  // OPERATION 1: Buy LEO tokens (OP_SWAP_A_TO_B)
+  .withSender(SBTC_USER_1)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      uintCV(1000000), // amount
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      uintCV(1000000),
       someCV(OP_SWAP_A_TO_B),
     ],
   })
 
-  // TEST 17: Execute swap B to A through registry
-  .withSender(USER_2)
+  // OPERATION 2: Sell LEO tokens (OP_SWAP_B_TO_A)
+  // User now has LEO tokens from previous buy, can sell them
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      uintCV(500000),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
+      uintCV(1000000000000), // Amount of LEO to sell
       someCV(OP_SWAP_B_TO_A),
     ],
   })
 
-  // TEST 18: Execute add liquidity through registry
-  .withSender(USER_1)
+  // OPERATION 3: Add liquidity (OP_ADD_LIQUIDITY)
+  .withSender(SBTC_USER_2)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      uintCV(2000000),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      uintCV(500000),
       someCV(OP_ADD_LIQUIDITY),
     ],
   })
 
-  // TEST 19: Execute remove liquidity through registry
+  // OPERATION 4: Remove liquidity (OP_REMOVE_LIQUIDITY)
+  // User now has LP tokens from previous add, can remove them
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
-      uintCV(1000000),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      uintCV(100000), // Amount of LP tokens to remove
       someCV(OP_REMOVE_LIQUIDITY),
     ],
   })
 
-  // TEST 20: Execute on unregistered pool (should fail - ERR_POOL_NOT_FOUND)
+  // ===== ERROR TESTS FOR EXECUTE =====
+
+  // TEST: Execute on unregistered pool (BOB pool exists but not registered)
+  .withSender(SBTC_USER_1)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
     function_args: [
-      contractPrincipalCV(DEPLOYER, "unregistered-pool"),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "bob-faktory-pool"
+      ),
       uintCV(1000000),
       someCV(OP_SWAP_A_TO_B),
     ],
   })
 
-  // TEST 21: Execute with default opcode (no opcode provided)
-  .withSender(USER_2)
+  // TEST: Execute with default opcode (defaults to 0x00/buy)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
     function_args: [
-      contractPrincipalCV(POOL_DEPLOYER, "bob-faktory-pool"),
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "leo-faktory-pool"
+      ),
       uintCV(100000),
-      noneCV(), // Will use default 0x00
+      noneCV(),
     ],
   })
 
-  // ===== FINAL STATE CHECKS =====
+  // ===== LOOKUP TESTS =====
 
-  // Check final registry state
   .withSender(DEPLOYER)
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-last-pool-id)")
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-pool-by-id u1)")
-  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-pool-by-id u2)")
-
-  // Summary of all registered pools
   .addEvalCode(
     `${DEPLOYER}.faktory-pool-registry`,
-    `(list (get-pool-by-id u1) (get-pool-by-id u2))`
+    `(get-pool-by-contract '${LEO_POOL})`
   )
+  .addEvalCode(
+    `${DEPLOYER}.faktory-pool-registry`,
+    `(get-pool-by-contract '${BOB_POOL})`
+  )
+  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-pool-by-id u1)")
+  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-pool-by-id u999)")
+  .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-last-pool-id)")
 
   .run()
   .catch(console.error);
 
 /*
-Expected Results Summary:
+Expected Results:
 
-✅ TEST 1: Register first pool - SUCCESS
-✅ TEST 2: Duplicate pool registration - FAIL (ERR_POOL_ALREADY_EXISTS u1002)
-✅ TEST 3: Unauthorized registration - FAIL (ERR_NOT_AUTHORIZED u1001)
-✅ TEST 4: Empty pool name - FAIL (ERR_INVALID_POOL_DATA u1004)
-✅ TEST 5: Empty pool symbol - FAIL (ERR_INVALID_POOL_DATA u1004)
-✅ TEST 6: Register second pool - SUCCESS
-✅ TEST 7: Lookup by contract - Returns pool info
-✅ TEST 8: Lookup non-existent - Returns none
-✅ TEST 9: Lookup invalid ID - Returns none
-✅ TEST 10: Edit pool metadata - SUCCESS
-✅ TEST 11: Unauthorized edit - FAIL (ERR_NOT_AUTHORIZED u1001)
-✅ TEST 12: Edit non-existent pool - FAIL (ERR_POOL_NOT_FOUND u1003)
-✅ TEST 13: Edit with empty name - FAIL (ERR_INVALID_POOL_DATA u1004)
-✅ TEST 14: Get pool with reserves - SUCCESS
-✅ TEST 15: Get non-existent pool - Returns (ok none)
-✅ TEST 16-19: Execute operations - SUCCESS (emits appropriate events)
-✅ TEST 20: Execute on unregistered pool - FAIL (ERR_POOL_NOT_FOUND u1003)
-✅ TEST 21: Execute with default opcode - SUCCESS
+✅ Deploy registry
+✅ Register 4 pools (LEO, B, sBTC, PEPE)
+✅ Duplicate registration fails (ERR_POOL_ALREADY_EXISTS u1002)
+✅ Unauthorized registration fails (ERR_NOT_AUTHORIZED u1001)
+✅ Empty name fails (ERR_INVALID_POOL_DATA u1004)
+✅ Empty symbol fails (ERR_INVALID_POOL_DATA u1004)
+✅ Edit pool succeeds
+✅ Unauthorized edit fails (ERR_NOT_AUTHORIZED u1001)
+✅ Edit non-existent fails (ERR_POOL_NOT_FOUND u1003)
+✅ Edit empty name fails (ERR_INVALID_POOL_DATA u1004)
+✅ Get pool with reserves succeeds
+✅ OP_SWAP_A_TO_B (Buy) succeeds
+✅ OP_SWAP_B_TO_A (Sell) succeeds (user has tokens from buy)
+✅ OP_ADD_LIQUIDITY succeeds
+✅ OP_REMOVE_LIQUIDITY succeeds (user has LP tokens from add)
+✅ Execute unregistered pool fails (ERR_POOL_NOT_FOUND u1003)
+✅ Execute with default opcode succeeds (buy)
+✅ Lookup tests verify pool data
 
-Total pools registered: 2
-Last pool ID: u2
+Total: 4 pools registered, all operations demonstrated successfully!
 */
+
+// --------------------------------
+// Using block height 4097147 hash 0xbe297751fbf26a1b014cf5bedd56ebafe31b511a1899613e1bafcd670e72b3ab to run simulation.
+// Simulation will be available at: https://stxer.xyz/simulations/mainnet/97f89460c6012aef760625aeef3a0925
+
+// Using block height 4097299 hash 0xbcbe7e95a70e0f94e7ca6f3c388c555eb78fa198be63e12c11ff82f473ff45d8 to run simulation.
+// Simulation will be available at: https://stxer.xyz/simulations/mainnet/762670e04f90a2095e982c51efd62b86
+
+// https://stxer.xyz/simulations/mainnet/762670e04f90a2095e982c51efd62b86
