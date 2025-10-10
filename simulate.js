@@ -345,12 +345,11 @@ SimulationBuilder.new()
     ],
   })
 
-  // ===== EXECUTE OPERATIONS - HAPPY PATH =====
-  // We'll demonstrate all 4 operations with proper setup
+  // ===== EXECUTE OPERATIONS - BUY AND SELL ON ALL 4 POOLS =====
 
-  // OPERATION 1: Buy LEO tokens (OP_SWAP_A_TO_B)
-  // User has sBTC, buys LEO
+  // === LEO POOL ===
   .withSender(SBTC_USER_1)
+  // Buy LEO tokens
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -359,13 +358,11 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "leo-faktory-pool"
       ),
-      uintCV(1000000),
+      uintCV(1000000), // Buy with 1M sBTC
       someCV(OP_SWAP_A_TO_B),
     ],
   })
-
-  // OPERATION 2: Sell LEO tokens (OP_SWAP_B_TO_A)
-  // User now has LEO tokens from previous buy, can sell them back
+  // Sell LEO tokens back
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -374,14 +371,14 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "leo-faktory-pool"
       ),
-      uintCV(1000000000000), // Amount of LEO to sell
+      uintCV(1000000000000), // Sell LEO tokens
       someCV(OP_SWAP_B_TO_A),
     ],
   })
 
-  // OPERATION 3: Add liquidity (OP_ADD_LIQUIDITY)
-  // First, user needs to buy B tokens so they have both B and sBTC
+  // === B POOL ===
   .withSender(SBTC_USER_2)
+  // Buy B tokens
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -390,11 +387,11 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "b-faktory-pool"
       ),
-      uintCV(500000), // Buy B tokens with sBTC first
+      uintCV(1000000), // Buy with 1M sBTC
       someCV(OP_SWAP_A_TO_B),
     ],
   })
-  // Now user has both B tokens and sBTC, can add liquidity
+  // Sell B tokens back
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -403,13 +400,85 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "b-faktory-pool"
       ),
-      uintCV(500000), // Amount of sBTC to add (pool will calculate B amount)
-      someCV(OP_ADD_LIQUIDITY),
+      uintCV(500000000000), // Sell B tokens
+      someCV(OP_SWAP_B_TO_A),
     ],
   })
 
-  // OPERATION 4: Remove liquidity (OP_REMOVE_LIQUIDITY)
-  // User now has LP tokens from previous add, can remove them
+  // === sBTC POOL ===
+  .withSender(SBTC_USER_3)
+  // Buy FakFun tokens
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
+        "sbtc-fakfun-amm-lp-v1"
+      ),
+      uintCV(1000000), // Buy with 1M sBTC
+      someCV(OP_SWAP_A_TO_B),
+    ],
+  })
+  // Sell FakFun tokens back
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
+        "sbtc-fakfun-amm-lp-v1"
+      ),
+      uintCV(1000000000000), // Sell FakFun tokens
+      someCV(OP_SWAP_B_TO_A),
+    ],
+  })
+
+  // === PEPE POOL ===
+  .withSender(SBTC_USER_1)
+  // Buy PEPE tokens
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
+        "pepe-faktory-pool"
+      ),
+      uintCV(1000000), // Buy with 1M sBTC
+      someCV(OP_SWAP_A_TO_B),
+    ],
+  })
+  // Sell PEPE tokens back
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
+        "pepe-faktory-pool"
+      ),
+      uintCV(1000000000000), // Sell PEPE tokens
+      someCV(OP_SWAP_B_TO_A),
+    ],
+  })
+
+  // === BONUS: Test Add/Remove Liquidity on one pool ===
+  .withSender(SBTC_USER_2)
+  // Add liquidity to B pool (user already has B tokens from earlier buy)
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      uintCV(500000), // Amount of sBTC to add
+      someCV(OP_ADD_LIQUIDITY),
+    ],
+  })
+  // Remove liquidity from B pool
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
