@@ -3,18 +3,6 @@
 
 This simulation tests the pool registry contract with realistic scenarios.
 We'll register 4 real pools and execute operations on each with proper setup.
-
-## Installation and Setup
-
-1. Install dependencies:
-   npm install stxer @stacks/transactions
-
-2. Add "type": "module" to your package.json
-
-3. Save this as simulate.js
-
-4. Run the simulation:
-   node simulate.js
 */
 
 import fs from "node:fs";
@@ -33,10 +21,10 @@ import { SimulationBuilder } from "stxer";
 
 // Define addresses - using users that actually have sBTC
 const DEPLOYER = "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM";
-const SBTC_USER_1 = "SP2QGMXH21KFDX99PWNB7Z7WNQ92TWFAECEEK10GE"; // Has sBTC
-const SBTC_USER_2 = "SP3GS0VZBE15D528128G7FN3HXJQ20BXCG4CNPG64"; // Has sBTC
-const SBTC_USER_3 = "SP2YS61K9JB3AR06S68JVFMFY4NFBE71EVF9T0R02"; // Has sBTC
-const RANDOM_USER = "SP1K1A1PMGW2ZJCNF46NWZWHG8TS1D23EGH1KNK60"; // Random user
+const SBTC_USER_1 = "SP2QGMXH21KFDX99PWNB7Z7WNQ92TWFAECEEK10GE"; // Has sBTC ✅
+const SBTC_USER_2 = "SP1DZARHA1GVEWVCDF1J9N044A69Q6VT7KMDPQ5N9"; // Has sBTC ✅
+const SBTC_USER_3 = "SM2FXSN6RZ85Q18S3X0GE2N0FVAA1DN1DPPDXEB5X"; // Has sBTC ✅
+const RANDOM_USER = "SP1K1A1PMGW2ZJCNF46NWZWHG8TS1D23EGH1KNK60";
 
 // Real deployed pool contracts
 const LEO_POOL = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.leo-faktory-pool";
@@ -44,11 +32,15 @@ const B_POOL = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool";
 const SBTC_POOL =
   "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.sbtc-fakfun-amm-lp-v1";
 const PEPE_POOL = "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool";
-const BOB_POOL = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.bob-faktory-pool"; // For unregistered test
+const BOB_POOL = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.bob-faktory-pool";
 
 // Token addresses
-const TOKEN_X = "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx";
-const TOKEN_Y = "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wleo";
+const SBTC_TOKEN = "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token";
+const LEO_TOKEN = "SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token";
+const B_TOKEN = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory";
+const FAKFUN_TOKEN = "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.fakfun-token";
+const PEPE_TOKEN =
+  "SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4kx15t9102";
 
 // Opcodes
 const OP_SWAP_A_TO_B = bufferCV(Buffer.from([0x00]));
@@ -69,12 +61,10 @@ SimulationBuilder.new()
     clarity_version: ClarityVersion.Clarity3,
   })
 
-  // Check initial state
   .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-last-pool-id)")
 
-  // ===== REGISTER 4 REAL POOLS =====
+  // ===== REGISTER 4 POOLS =====
 
-  // Register LEO pool
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
@@ -83,17 +73,16 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "leo-faktory-pool"
       ),
-      stringAsciiCV("LEO-STX LP"),
-      stringAsciiCV("LEO-STX"),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wleo"),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx"),
+      stringAsciiCV("LEO-sBTC LP"),
+      stringAsciiCV("LEO-SBTC"),
+      principalCV("SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"),
+      principalCV("SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token"),
       uintCV(150000),
       uintCV(30),
       someCV(stringUtf8CV("https://faktory.fun/pool/leo")),
     ],
   })
 
-  // Register B pool
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
@@ -102,17 +91,16 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "b-faktory-pool"
       ),
-      stringAsciiCV("B-STX LP"),
-      stringAsciiCV("B-STX"),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wb"),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx"),
+      stringAsciiCV("B-sBTC LP"),
+      stringAsciiCV("B-SBTC"),
+      principalCV("SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"),
+      principalCV("SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory"),
       uintCV(150100),
       uintCV(30),
       someCV(stringUtf8CV("https://faktory.fun/pool/b")),
     ],
   })
 
-  // Register sBTC pool
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
@@ -123,15 +111,14 @@ SimulationBuilder.new()
       ),
       stringAsciiCV("sBTC-FakFun LP"),
       stringAsciiCV("SBTC-FAK"),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wsbtc"),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-fakfun"),
+      principalCV("SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"),
+      principalCV("SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.fakfun-token"),
       uintCV(150200),
       uintCV(25),
       someCV(stringUtf8CV("https://faktory.fun/pool/sbtc")),
     ],
   })
 
-  // Register PEPE pool
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
@@ -140,24 +127,22 @@ SimulationBuilder.new()
         "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
         "pepe-faktory-pool"
       ),
-      stringAsciiCV("PEPE-STX LP"),
-      stringAsciiCV("PEPE-STX"),
+      stringAsciiCV("PEPE-sBTC LP"),
+      stringAsciiCV("PEPE-SBTC"),
+      principalCV("SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"),
       principalCV(
         "SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4kx15t9102"
       ),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx"),
       uintCV(150300),
       uintCV(30),
       someCV(stringUtf8CV("https://faktory.fun/pool/pepe")),
     ],
   })
 
-  // Check all pools registered
   .addEvalCode(`${DEPLOYER}.faktory-pool-registry`, "(get-last-pool-id)")
 
   // ===== ERROR TESTS =====
 
-  // TEST: Duplicate registration
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
@@ -168,15 +153,14 @@ SimulationBuilder.new()
       ),
       stringAsciiCV("LEO Duplicate"),
       stringAsciiCV("LEO-DUP"),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
+      principalCV(SBTC_TOKEN),
+      principalCV(LEO_TOKEN),
       uintCV(150000),
       uintCV(30),
       noneCV(),
     ],
   })
 
-  // TEST: Unauthorized registration
   .withSender(RANDOM_USER)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
@@ -188,15 +172,14 @@ SimulationBuilder.new()
       ),
       stringAsciiCV("Fake Pool"),
       stringAsciiCV("FAKE"),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
+      principalCV(SBTC_TOKEN),
+      principalCV(LEO_TOKEN),
       uintCV(150100),
       uintCV(25),
       noneCV(),
     ],
   })
 
-  // TEST: Empty name validation
   .withSender(DEPLOYER)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
@@ -208,15 +191,14 @@ SimulationBuilder.new()
       ),
       stringAsciiCV(""),
       stringAsciiCV("TEST"),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
+      principalCV(SBTC_TOKEN),
+      principalCV(LEO_TOKEN),
       uintCV(150100),
       uintCV(25),
       noneCV(),
     ],
   })
 
-  // TEST: Empty symbol validation
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "register-pool",
@@ -227,129 +209,16 @@ SimulationBuilder.new()
       ),
       stringAsciiCV("Test Pool"),
       stringAsciiCV(""),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
+      principalCV(SBTC_TOKEN),
+      principalCV(LEO_TOKEN),
       uintCV(150100),
       uintCV(25),
       noneCV(),
     ],
   })
 
-  // ===== EDIT POOL TESTS =====
-
-  // TEST: Edit pool successfully
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "edit-pool",
-    function_args: [
-      uintCV(1),
-      contractPrincipalCV(
-        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "leo-faktory-pool"
-      ),
-      stringAsciiCV("LEO-STX LP v2"),
-      stringAsciiCV("LEO-STX-V2"),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wleo"),
-      principalCV("SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.token-wstx"),
-      uintCV(150000),
-      uintCV(35),
-      someCV(stringUtf8CV("https://faktory.fun/pool/leo-v2")),
-    ],
-  })
-
-  // TEST: Unauthorized edit
-  .withSender(RANDOM_USER)
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "edit-pool",
-    function_args: [
-      uintCV(1),
-      contractPrincipalCV(
-        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "leo-faktory-pool"
-      ),
-      stringAsciiCV("Hacked"),
-      stringAsciiCV("HACK"),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
-      uintCV(150000),
-      uintCV(100),
-      noneCV(),
-    ],
-  })
-
-  // TEST: Edit non-existent pool
-  .withSender(DEPLOYER)
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "edit-pool",
-    function_args: [
-      uintCV(999),
-      contractPrincipalCV(
-        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "leo-faktory-pool"
-      ),
-      stringAsciiCV("Ghost Pool"),
-      stringAsciiCV("GHOST"),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
-      uintCV(150000),
-      uintCV(30),
-      noneCV(),
-    ],
-  })
-
-  // TEST: Edit with empty name
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "edit-pool",
-    function_args: [
-      uintCV(1),
-      contractPrincipalCV(
-        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "leo-faktory-pool"
-      ),
-      stringAsciiCV(""),
-      stringAsciiCV("LEO-STX"),
-      principalCV(TOKEN_X),
-      principalCV(TOKEN_Y),
-      uintCV(150000),
-      uintCV(30),
-      noneCV(),
-    ],
-  })
-
-  // ===== GET-POOL TESTS =====
-
-  // Get LEO pool with reserves
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "get-pool",
-    function_args: [
-      contractPrincipalCV(
-        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "leo-faktory-pool"
-      ),
-    ],
-  })
-
-  // Get B pool with reserves
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "get-pool",
-    function_args: [
-      contractPrincipalCV(
-        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "b-faktory-pool"
-      ),
-    ],
-  })
-
-  // ===== EXECUTE OPERATIONS - BUY AND SELL ON ALL 4 POOLS =====
-
-  // === LEO POOL ===
+  // === LEO POOL - All 4 operations ===
   .withSender(SBTC_USER_1)
-  // Buy LEO tokens
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -358,11 +227,10 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "leo-faktory-pool"
       ),
-      uintCV(1000000), // Buy with 1M sBTC
+      uintCV(1000000),
       someCV(OP_SWAP_A_TO_B),
     ],
   })
-  // Sell LEO tokens back
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -371,131 +239,189 @@ SimulationBuilder.new()
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
         "leo-faktory-pool"
       ),
-      uintCV(1000000000000), // Sell LEO tokens
+      uintCV(500000000000),
       someCV(OP_SWAP_B_TO_A),
     ],
   })
-
-  // === B POOL ===
-  .withSender(SBTC_USER_2)
-  // Buy B tokens
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
     function_args: [
       contractPrincipalCV(
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "b-faktory-pool"
+        "leo-faktory-pool"
       ),
-      uintCV(1000000), // Buy with 1M sBTC
-      someCV(OP_SWAP_A_TO_B),
-    ],
-  })
-  // Sell B tokens back
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "execute",
-    function_args: [
-      contractPrincipalCV(
-        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "b-faktory-pool"
-      ),
-      uintCV(500000000000), // Sell B tokens
-      someCV(OP_SWAP_B_TO_A),
-    ],
-  })
-
-  // === sBTC POOL ===
-  .withSender(SBTC_USER_3)
-  // Buy FakFun tokens
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "execute",
-    function_args: [
-      contractPrincipalCV(
-        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
-        "sbtc-fakfun-amm-lp-v1"
-      ),
-      uintCV(1000000), // Buy with 1M sBTC
-      someCV(OP_SWAP_A_TO_B),
-    ],
-  })
-  // Sell FakFun tokens back
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "execute",
-    function_args: [
-      contractPrincipalCV(
-        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
-        "sbtc-fakfun-amm-lp-v1"
-      ),
-      uintCV(1000000000000), // Sell FakFun tokens
-      someCV(OP_SWAP_B_TO_A),
-    ],
-  })
-
-  // === PEPE POOL ===
-  .withSender(SBTC_USER_1)
-  // Buy PEPE tokens
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "execute",
-    function_args: [
-      contractPrincipalCV(
-        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
-        "pepe-faktory-pool"
-      ),
-      uintCV(1000000), // Buy with 1M sBTC
-      someCV(OP_SWAP_A_TO_B),
-    ],
-  })
-  // Sell PEPE tokens back
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "execute",
-    function_args: [
-      contractPrincipalCV(
-        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
-        "pepe-faktory-pool"
-      ),
-      uintCV(1000000000000), // Sell PEPE tokens
-      someCV(OP_SWAP_B_TO_A),
-    ],
-  })
-
-  // === BONUS: Test Add/Remove Liquidity on one pool ===
-  .withSender(SBTC_USER_2)
-  // Add liquidity to B pool (user already has B tokens from earlier buy)
-  .addContractCall({
-    contract_id: `${DEPLOYER}.faktory-pool-registry`,
-    function_name: "execute",
-    function_args: [
-      contractPrincipalCV(
-        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "b-faktory-pool"
-      ),
-      uintCV(500000), // Amount of sBTC to add
+      uintCV(500000),
       someCV(OP_ADD_LIQUIDITY),
     ],
   })
-  // Remove liquidity from B pool
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
     function_args: [
       contractPrincipalCV(
         "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
-        "b-faktory-pool"
+        "leo-faktory-pool"
       ),
-      uintCV(100000), // Amount of LP tokens to remove
+      uintCV(100000),
       someCV(OP_REMOVE_LIQUIDITY),
     ],
   })
 
-  // ===== ERROR TESTS FOR EXECUTE =====
+  // === B POOL - All 4 operations ===
+  .withSender(SBTC_USER_2)
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      uintCV(1000000),
+      someCV(OP_SWAP_A_TO_B),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      uintCV(500000000000),
+      someCV(OP_SWAP_B_TO_A),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      uintCV(500000),
+      someCV(OP_ADD_LIQUIDITY),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22",
+        "b-faktory-pool"
+      ),
+      uintCV(100000),
+      someCV(OP_REMOVE_LIQUIDITY),
+    ],
+  })
 
-  // TEST: Execute on unregistered pool (BOB pool exists but not registered)
+  // === sBTC-FakFun POOL - All 4 operations ===
+  .withSender(SBTC_USER_3)
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
+        "sbtc-fakfun-amm-lp-v1"
+      ),
+      uintCV(1000000),
+      someCV(OP_SWAP_A_TO_B),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
+        "sbtc-fakfun-amm-lp-v1"
+      ),
+      uintCV(500000000000),
+      someCV(OP_SWAP_B_TO_A),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
+        "sbtc-fakfun-amm-lp-v1"
+      ),
+      uintCV(500000),
+      someCV(OP_ADD_LIQUIDITY),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS",
+        "sbtc-fakfun-amm-lp-v1"
+      ),
+      uintCV(100000),
+      someCV(OP_REMOVE_LIQUIDITY),
+    ],
+  })
+
+  // === PEPE POOL - All 4 operations ===
   .withSender(SBTC_USER_1)
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
+        "pepe-faktory-pool"
+      ),
+      uintCV(1000000),
+      someCV(OP_SWAP_A_TO_B),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
+        "pepe-faktory-pool"
+      ),
+      uintCV(50000000000),
+      someCV(OP_SWAP_B_TO_A),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
+        "pepe-faktory-pool"
+      ),
+      uintCV(500000),
+      someCV(OP_ADD_LIQUIDITY),
+    ],
+  })
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "execute",
+    function_args: [
+      contractPrincipalCV(
+        "SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ",
+        "pepe-faktory-pool"
+      ),
+      uintCV(100000),
+      someCV(OP_REMOVE_LIQUIDITY),
+    ],
+  })
+
+  // === ERROR TESTS ===
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -509,7 +435,6 @@ SimulationBuilder.new()
     ],
   })
 
-  // TEST: Execute with default opcode (defaults to 0x00/buy)
   .addContractCall({
     contract_id: `${DEPLOYER}.faktory-pool-registry`,
     function_name: "execute",
@@ -522,8 +447,6 @@ SimulationBuilder.new()
       noneCV(),
     ],
   })
-
-  // ===== LOOKUP TESTS =====
 
   .withSender(DEPLOYER)
   .addEvalCode(
@@ -574,3 +497,5 @@ Total: 4 pools registered, all operations demonstrated successfully!
 // Simulation will be available at: https://stxer.xyz/simulations/mainnet/762670e04f90a2095e982c51efd62b86
 
 // https://stxer.xyz/simulations/mainnet/762670e04f90a2095e982c51efd62b86
+
+// all green https://stxer.xyz/simulations/mainnet/4539a6ffebcda3cb2417ac4192c94a94

@@ -1,5 +1,5 @@
 ;; Pool Registry
-;; A simple registry to track all FakFun and Charisma liquidity pools for easy discovery
+;; A simple registry to track all Dexterity liquidity pools for easy discovery
 
 ;; Error constants
 (define-constant ERR_NOT_AUTHORIZED (err u1001))
