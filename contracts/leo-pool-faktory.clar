@@ -152,9 +152,8 @@
       transfer amount sender CONTRACT none
     ))
     ;; Transfer token B to sender
-    (try! (as-contract (contract-call?
-      'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
-      transfer dy-d CONTRACT sender none
+    (try! (as-contract (contract-call? 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token transfer
+      dy-d CONTRACT sender none
     )))
     (print {
       type: "buy",
@@ -165,13 +164,16 @@
       amount-out: dy-d,
       pool-reserves: (get-reserves-quote),
       pool-contract: CONTRACT,
-      min-y-out: min-y-out
+      min-y-out: min-y-out,
     })
     (ok delta)
   )
 )
 
-(define-public (swap-b-to-a (amount uint) (min-y-out uint))
+(define-public (swap-b-to-a
+    (amount uint)
+    (min-y-out uint)
+  )
   (let (
       (sender tx-sender)
       (delta (get-swap-quote amount (some 0x01)))
@@ -179,9 +181,8 @@
     )
     (asserts! (>= dy-d min-y-out) ERR_TOO_MUCH_SLIPPAGE)
     ;; Transfer token B to pool
-    (try! (contract-call?
-      'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
-      transfer amount sender CONTRACT none
+    (try! (contract-call? 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token transfer
+      amount sender CONTRACT none
     ))
     ;; Transfer token A to sender
     (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
@@ -196,7 +197,7 @@
       amount-out: dy-d,
       pool-reserves: (get-reserves-quote),
       pool-contract: CONTRACT,
-      min-y-out: min-y-out
+      min-y-out: min-y-out,
     })
     (ok delta)
   )
@@ -213,9 +214,8 @@
     (try! (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
       transfer dx-d sender CONTRACT none
     ))
-    (try! (contract-call?
-      'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
-      transfer dy-d sender CONTRACT none
+    (try! (contract-call? 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token transfer
+      dy-d sender CONTRACT none
     ))
     (try! (ft-mint? sBTC-leo dk-d sender))
     (print {
@@ -245,9 +245,8 @@
     (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
       transfer dx-d CONTRACT sender none
     )))
-    (try! (as-contract (contract-call?
-      'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
-      transfer dy-d CONTRACT sender none
+    (try! (as-contract (contract-call? 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token transfer
+      dy-d CONTRACT sender none
     )))
     (print {
       type: "remove-liquidity",
@@ -278,8 +277,7 @@
     a: (unwrap-panic (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
       get-balance CONTRACT
     )),
-    b: (unwrap-panic (contract-call?
-      'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
+    b: (unwrap-panic (contract-call? 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
       get-balance CONTRACT
     )),
   }
@@ -350,9 +348,9 @@
 
 ;; --- Initialization ---
 ;; (begin
-;;   ;; Add initial balanced liquidity (handles both token transfers at 1:1)
+;;;;    Add initial balanced liquidity (handles both token transfers at 1:1)
 ;;   (try! (add-liquidity u1863157))
-;;   ;; Transfer additional token B to achieve desired ratio
+;;;;    Transfer additional token B to achieve desired ratio
 ;;   (try! (contract-call?
 ;;     'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
 ;;     transfer u7029998136843 tx-sender CONTRACT none

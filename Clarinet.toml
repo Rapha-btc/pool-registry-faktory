@@ -16,10 +16,11 @@ contract_id = 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token'
 
 [[project.requirements]]
 contract_id = 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token'
+
 [contracts.faktory-pool-registry]
 path = 'contracts/faktory-pool-registry.clar'
 clarity_version = 3
-epoch = 'latest'
+epoch = '3.2'
 
 [contracts.leo-pool-faktory]
 path = 'contracts/leo-pool-faktory.clar'

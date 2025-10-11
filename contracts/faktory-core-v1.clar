@@ -96,6 +96,59 @@
     )
 )
 
+(define-public (auto-register-pool 
+    (pool-contract principal)
+    (name (string-ascii 64))
+    (symbol (string-ascii 32))
+    (x-token principal)
+    (y-token principal)
+    (creation-height uint)
+    (lp-fee uint)
+    (pool-uri (optional (string-utf8 256)))
+    (dx uint)
+    (dy uint)
+    (dk uint)
+) ;; pass reserves inside of the arguments
+    (let (
+        (new-pool-id (+ (var-get last-pool-id) u1))
+        (uri (default-to u"https://faktory.fun/" pool-uri))
+        (caller tx-sender)
+    )
+        (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
+        (asserts! (is-none (map-get? pool-contracts pool-contract)) ERR_POOL_ALREADY_EXISTS)
+        (asserts! (> (len name) u0) ERR_INVALID_POOL_DATA)
+        (asserts! (> (len symbol) u0) ERR_INVALID_POOL_DATA)        
+        (map-set pools new-pool-id {
+            pool-contract: pool-contract,
+            pool-name: name,
+            pool-symbol: symbol,
+            x-token: x-token,
+            y-token: y-token,
+            creation-height: creation-height,
+            lp-fee: lp-fee,
+            pool-uri: uri
+        })        
+        (map-set pool-contracts pool-contract new-pool-id)        
+        (var-set last-pool-id new-pool-id)        
+        (print {
+            action: "register-pool",
+            caller: caller,
+            pool-id: new-pool-id,
+            pool-contract: pool-contract,
+            pool-name: name,
+            pool-symbol: symbol,
+            x-token: x-token,
+            y-token: y-token,
+            creation-height: creation-height,
+            lp-fee: lp-fee,
+            pool-uri: uri,
+            x-amount: dx,
+            y-amount: dy,    
+            total-shares: dk })
+        (ok new-pool-id)
+    )
+)
+
 (define-public (edit-pool
     (pool-id uint)
     (pool-contract <pool-trait>)

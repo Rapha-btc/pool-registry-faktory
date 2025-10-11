@@ -352,12 +352,26 @@
 ;; --- Initialization ---
 (begin
   ;; Add initial balanced liquidity (handles both token transfers at 1:1)
-  (try! (add-liquidity u1863157))
+  ;; (try! (add-liquidity u1863157))
   ;; Transfer additional token B to achieve desired ratio
-  (try! (contract-call?
-    'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
-    transfer u7029998136843 tx-sender CONTRACT none
-  ))
+  ;; (try! (contract-call?
+  ;;   'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
+  ;;   transfer u7029998136843 tx-sender CONTRACT none
+  ;; ))
+  (try! (contract-call? .faktory-core-v1 
+            auto-register-pool 
+            CONTRACT 
+            "sBTC-leo lp-token"
+            "sBTC-leo"
+            'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
+            'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token 
+            burn-block-height
+            LP_REBATE
+            none
+            u1863157
+            (+ u1863157 u7029998136843)
+            u1863157
+            ))
   (print {
       type: "initialize-pool",
       sender: tx-sender,
