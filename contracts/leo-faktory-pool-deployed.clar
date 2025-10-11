@@ -352,12 +352,12 @@
 ;; --- Initialization ---
 (begin
   ;; Add initial balanced liquidity (handles both token transfers at 1:1)
-  ;; (try! (add-liquidity u1863157))
+  (try! (add-liquidity u1863157))
   ;; Transfer additional token B to achieve desired ratio
-  ;; (try! (contract-call?
-  ;;   'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
-  ;;   transfer u7029998136843 tx-sender CONTRACT none
-  ;; ))
+  (try! (contract-call?
+    'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
+    transfer u7029998136843 tx-sender CONTRACT none
+  ))
   (try! (contract-call? .faktory-core-v1 
             auto-register-pool 
             CONTRACT 
