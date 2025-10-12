@@ -17,6 +17,11 @@ contract_id = 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token'
 [[project.requirements]]
 contract_id = 'SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token'
 
+[[project.requirements]]
+contract_id = 'SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B.prelaunch-faktory-trait'
+
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.faktory-dex-trait'
 [contracts.faktory-pool-registry]
 path = 'contracts/faktory-pool-registry.clar'
 clarity_version = 3
@@ -31,6 +36,11 @@ epoch = '3.1'
 path = 'contracts/pool-registry-faktory.clar'
 clarity_version = 3
 epoch = '3.1'
+
+[contracts.prelaunch-faktory-trait]
+path = 'contracts/prelaunch-faktory-trait.clar'
+clarity_version = 3
+epoch = 'latest'
 [repl.analysis]
 passes = ['check_checker']
 

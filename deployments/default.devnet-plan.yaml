@@ -1,0 +1,131 @@
+---
+id: 0
+name: Devnet deployment
+network: devnet
+stacks-node: "http://localhost:20443"
+bitcoin-node: "http://devnet:devnet@localhost:18443"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - requirement-publish:
+            contract-id: SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 8400
+            path: "./.cache/requirements/SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.clar"
+            clarity-version: 1
+      epoch: "2.0"
+    - id: 1
+      transactions:
+        - requirement-publish:
+            contract-id: SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 27910
+            path: "./.cache/requirements/SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token.clar"
+            clarity-version: 2
+      epoch: "2.4"
+    - id: 2
+      transactions:
+        - requirement-publish:
+            contract-id: SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-registry
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 112090
+            path: "./.cache/requirements/SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-registry.clar"
+            clarity-version: 3
+        - requirement-publish:
+            contract-id: SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 47590
+            path: "./.cache/requirements/SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token.clar"
+            clarity-version: 3
+        - requirement-publish:
+            contract-id: SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 41510
+            path: "./.cache/requirements/SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit.clar"
+            clarity-version: 3
+        - requirement-publish:
+            contract-id: SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.charisma-traits-v1
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 33960
+            path: "./.cache/requirements/SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.charisma-traits-v1.clar"
+            clarity-version: 3
+        - requirement-publish:
+            contract-id: SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.dexterity-traits-v0
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 2610
+            path: "./.cache/requirements/SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.dexterity-traits-v0.clar"
+            clarity-version: 3
+      epoch: "3.0"
+    - id: 3
+      transactions:
+        - requirement-publish:
+            contract-id: SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 8390
+            path: "./.cache/requirements/SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1.clar"
+            clarity-version: 3
+        - requirement-publish:
+            contract-id: SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.faktory-dex-trait
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 10920
+            path: "./.cache/requirements/SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.faktory-dex-trait.clar"
+            clarity-version: 3
+        - contract-publish:
+            contract-name: leo-pool-faktory
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 96310
+            path: contracts/leo-pool-faktory.clar
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: pool-registry-faktory
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 57100
+            path: contracts/pool-registry-faktory.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.1"
+    - id: 4
+      transactions:
+        - requirement-publish:
+            contract-id: SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B.prelaunch-faktory-trait
+            remap-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            remap-principals:
+              SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 5890
+            path: "./.cache/requirements/SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B.prelaunch-faktory-trait.clar"
+            clarity-version: 3
+        - contract-publish:
+            contract-name: prelaunch-faktory-trait
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 5890
+            path: contracts/prelaunch-faktory-trait.clar
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: faktory-pool-registry
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 164320
+            path: contracts/faktory-pool-registry.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.2"

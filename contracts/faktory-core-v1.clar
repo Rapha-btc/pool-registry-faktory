@@ -336,14 +336,15 @@
     (position uint))
     (default-to 0x00 (element-at? opcode position)))
 
-(define-public (place
+(define-public (place-order
     (dex <dex-trait>)
     (token <token-trait>)
     (amount uint)
     (owner (optional principal))
-    (opcode (optional (buff 16)))))
+    (opcode (optional (buff 16))))
   (let (
       (sender tx-sender)
+      (operation (get-byte (default-to 0x00 opcode) u0)) 
       (dex-principal (contract-of dex))
       (dex-info (map-get? dexes dex-principal))
     )
@@ -363,10 +364,9 @@
                             y-supply: (get y-supply info),
                             creation-height: (get creation-height info),
                             dex-contract: dex-principal })
-                         true )
+                         (ok tokens-out))
                     (if (is-eq operation OP_SWAP_B_TO_A)
-                        (let ((ubtc-out (try! (contract-call? dex sell token amount)))
-                              (result ubtc-out))
+                        (let ((ubtc-out (try! (contract-call? dex sell token amount))))
                         (print {
                             type: "sell",
                             sender: sender,
@@ -378,10 +378,9 @@
                             y-supply: (get y-supply info),
                             creation-height: (get creation-height info),
                             dex-contract: dex-principal })
-                        true )
+                        (ok ubtc-out))
                         (if (is-eq operation OP_ADD_LIQUIDITY)
-                            (let ((actual-seats (try! (contract-call? dex buy-up-to amount owner)))
-                                  (result actual-seats))
+                            (let ((actual-seats (try! (contract-call? dex buy-up-to amount owner))))
                             (print {
                                 type: "buy-seats",
                                 sender: (default-to tx-sender owner),
@@ -393,10 +392,9 @@
                                 y-supply: (get y-supply info),
                                 creation-height: (get creation-height info),
                                 dex-contract: dex-principal })
-                            true )
+                            (ok actual-seats))
                             (if (is-eq operation OP_REMOVE_LIQUIDITY)
-                                (let ((user-seats (try! (contract-call? dex refund owner)))
-                                      (result user-seats))
+                                (let ((user-seats (try! (contract-call? dex refund owner))))
                                 (print {
                                     type: "refund-seats",
                                     sender: (default-to tx-sender owner),
@@ -408,12 +406,11 @@
                                     y-supply: (get y-supply info),
                                     creation-height: (get creation-height info),
                                     dex-contract: dex-principal })
-                                true )
+                                (ok user-seats))
                                 (asserts! false ERR_INVALID_OPERATION)  
                             )
                         )
                     )
                 )
         )
-    (asserts! false ERR_POOL_NOT_FOUND))
-    (ok result))
+    (asserts! false ERR_POOL_NOT_FOUND))))
