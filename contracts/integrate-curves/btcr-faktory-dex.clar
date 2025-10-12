@@ -83,10 +83,18 @@
                 (var-set stx-balance u0)
                 (var-set ft-balance u0)
                 (try! (as-contract (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.btcr-pre-faktory toggle-bonded))) 
-                (print {type: "buy", ft: (contract-of ft), tokens-out: tokens-out, ustx: ubtc, premium-amount: premium-amount, amm-amount: amm-amount,
+                (print {type: "buy", 
+                        ft: (contract-of ft), 
+                        tokens-out: tokens-out, 
+                        ustx: ubtc, 
+                        premium-amount: premium-amount, 
+                        amm-amount: amm-amount,
                         amm-ustx: amm-ustx,
-                        stx-balance: u0, ft-balance: u0,
-                        fee: fee, grad-fee: GRAD-FEE, maker: tx-sender,
+                        stx-balance: u0, 
+                        ft-balance: u0,
+                        fee: fee, 
+                        grad-fee: GRAD-FEE, 
+                        maker: tx-sender,
                         open: false})
                 (ok true))
               (begin
