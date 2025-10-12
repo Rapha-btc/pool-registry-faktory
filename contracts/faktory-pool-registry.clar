@@ -380,11 +380,11 @@
                             creation-height: (get creation-height info),
                             dex-contract: dex-principal })
                         (ok ubtc-out))
-                        (asserts! false ERR_INVALID_OPERATION) 
+                        ERR_INVALID_OPERATION
                     )
                 )
               )
-        (asserts! false ERR_POOL_NOT_FOUND))))
+        ERR_POOL_NOT_FOUND)))
 
 (define-public (prelaunch
     (pre <pre-trait>)
@@ -401,36 +401,31 @@
         info (begin
                 (if (is-eq operation OP_ADD_LIQUIDITY)
                     (let ((actual-seats (try! (contract-call? pre buy-up-to seat-count owner))))
-                    (print {
-                        type: "buy-seats",
-                        sender: (default-to tx-sender owner),
-                        token-in: (get x-token info),
-                        amount-in: (* actual-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
-                        token-out: (get y-token info),
-                        amount-out: (* actual-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
-                        x-target: (get x-target info),
-                        y-supply: (get y-supply info),
-                        creation-height: (get creation-height info),
-                        pre-contract: pre-principal })
-                    (ok actual-seats))
-                    (if (is-eq operation OP_REMOVE_LIQUIDITY)
-                        (let ((user-seats (try! (contract-call? pre refund owner))))
                         (print {
-                            type: "refund-seats",
+                            type: "buy-seats",
                             sender: (default-to tx-sender owner),
-                            token-in: (get y-token info),
-                            amount-in: (* user-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
-                            token-out: (get x-token info),
-                            amount-out: (* user-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
+                            token-in: (get x-token info),
+                            amount-in: (* actual-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
+                            token-out: (get y-token info),
+                            amount-out: (* actual-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
                             x-target: (get x-target info),
                             y-supply: (get y-supply info),
                             creation-height: (get creation-height info),
                             pre-contract: pre-principal })
-                        (ok user-seats))
-                        (asserts! false ERR_INVALID_OPERATION)  
-                    )
-                )
-                    )
-                )
-        )
-    (asserts! false ERR_POOL_NOT_FOUND))
+                        (ok actual-seats))
+                    (if (is-eq operation OP_REMOVE_LIQUIDITY)
+                        (let ((user-seats (try! (contract-call? pre refund owner))))
+                            (print {
+                                type: "refund-seats",
+                                sender: (default-to tx-sender owner),
+                                token-in: (get y-token info),
+                                amount-in: (* user-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
+                                token-out: (get x-token info),
+                                amount-out: (* user-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
+                                x-target: (get x-target info),
+                                y-supply: (get y-supply info),
+                                creation-height: (get creation-height info),
+                                pre-contract: pre-principal })
+                            (ok user-seats))
+                        ERR_INVALID_OPERATION)))
+        ERR_POOL_NOT_FOUND)))
