@@ -205,7 +205,7 @@
             ;; look at circular issues in registration later -> register owner as agent when it's registered as owner of an agent
             (asserts! (or 
                 (is-eq tx-sender seat-owner)  ;; Direct seat owner
-                (match (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.agent-account-registry get-agent-account-info seat-owner)
+                (match (contract-call? .account-registry get-account-info seat-owner)
                     agent-info (is-eq tx-sender (get owner agent-info))  ;; tx-sender owns the agent account
                     none false  ;; seat-owner is not an agent account
                 )

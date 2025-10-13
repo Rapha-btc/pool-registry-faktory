@@ -13,6 +13,12 @@
 (define-constant OP_REMOVE_LIQUIDITY 0x03)
 (define-constant OP_LOOKUP_RESERVES 0x04)
 
+(use-trait pool-trait 'SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.dexterity-traits-v0.liquidity-pool-trait)
+(use-trait dex-trait 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.faktory-dex-trait.dex-trait) 
+(use-trait pre-trait 'SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B.prelaunch-faktory-trait.prelaunch-trait)
+(use-trait token-trait 'SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1.sip-010-trait)
+
+
 (define-constant DEPLOYER tx-sender)
 
 (define-data-var last-pool-id uint u0)
@@ -29,23 +35,6 @@
 })
 
 (define-map pool-contracts principal uint)
-
-(define-map dexes 
-  principal 
-  {
-    x-token: principal,
-    y-token: principal,
-    x-target: uint,
-    y-supply: uint,
-    price-per-seat: (optional uint)
-    tokens-per-seat: (optional uint)
-    creation-height: uint,
-  }
-)
-
-(use-trait pool-trait 'SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.dexterity-traits-v0.liquidity-pool-trait)
-(use-trait dex-trait 'SP29CK9990DQGE9RGTT1VEQTTYH8KY4E3JE5XP4EC.faktory-dex-trait-v1-1.dex-trait)
-(use-trait token-trait 'SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1.sip-010-trait)
 
 (define-read-only (get-last-pool-id)
    (var-get last-pool-id)
@@ -125,8 +114,7 @@
     (dx uint)
     (dy uint)
     (dk uint)
-) ;; pass reserves inside of the arguments
-;; this one we gate it contract-caller ?! i forgot
+) 
     (let (
         (new-pool-id (+ (var-get last-pool-id) u1))
         (uri (default-to u"https://faktory.fun/" pool-uri))
@@ -336,23 +324,165 @@
     (position uint))
     (default-to 0x00 (element-at? opcode position)))
 
+(define-data-var last-dex-id uint u0)
+
+(define-map dexes uint {
+    dex-contract: principal,
+    pre-contract: principal,
+    x-token: principal,
+    y-token: principal,
+    x-target: uint,
+    y-supply: uint,
+    price-per-seat: (optional uint),
+    tokens-per-seat: (optional uint),
+    creation-height: uint,
+  }
+)
+
+(define-map dex-contracts principal uint)
+(define-map pre-contracts principal uint)
+
+(define-read-only (get-last-dex-id)
+   (var-get last-dex-id)
+)
+
+(define-read-only (get-dex-by-id (dex-id uint))
+    (map-get? dexes dex-id)
+)
+
+(define-read-only (get-dex-by-contract (dex-contract principal))
+    (match (map-get? dex-contracts dex-contract)
+        dex-id (map-get? dexes dex-id)
+        none
+    )
+)
+
+(define-read-only (get-pre-by-contract (pre-contract principal))
+    (match (map-get? pre-contracts pre-contract)
+        dex-id (map-get? dexes dex-id)
+        none
+    )
+)
+
+(define-public (register-dex
+    (dex-contract principal)
+    (pre-contract principal)
+    (x-token principal)
+    (y-token principal)
+    (x-target uint)
+    (y-supply uint)
+    (price-per-seat (optional uint))
+    (tokens-per-seat (optional uint))
+    (creation-height uint)
+)
+    (let (
+        (new-dex-id (+ (var-get last-dex-id) u1))
+        (caller tx-sender)
+    )
+        (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
+        (asserts! (is-none (map-get? dex-contracts dex-contract)) ERR_POOL_ALREADY_EXISTS)
+        (asserts! (is-none (map-get? pre-contracts pre-contract)) ERR_POOL_ALREADY_EXISTS)
+
+        (map-set dexes new-dex-id {
+            dex-contract: dex-contract,
+            pre-contract: pre-contract,
+            x-token: x-token,
+            y-token: y-token,
+            x-target: x-target,
+            y-supply: y-supply,
+            price-per-seat: price-per-seat,
+            tokens-per-seat: tokens-per-seat,
+            creation-height: creation-height
+        })
+        
+        (map-set dex-contracts dex-contract new-dex-id)
+        (map-set pre-contracts pre-contract new-dex-id)
+        (var-set last-dex-id new-dex-id)
+        
+        (print {
+            action: "register-dex",
+            caller: caller,
+            dex-id: new-dex-id,
+            dex-contract: dex-contract,
+            pre-contract: pre-contract,
+            x-token: x-token,
+            y-token: y-token,
+            x-target: x-target,
+            y-supply: y-supply,
+            price-per-seat: price-per-seat,
+            tokens-per-seat: tokens-per-seat,
+            creation-height: creation-height
+        })
+        (ok new-dex-id)
+    )
+)
+
+(define-public (edit-dex
+    (dex-id uint)
+    (dex-contract principal)
+    (pre-contract principal)
+    (x-token principal)
+    (y-token principal)
+    (x-target uint)
+    (y-supply uint)
+    (price-per-seat (optional uint))
+    (tokens-per-seat (optional uint))
+    (creation-height uint)
+)
+    (let (
+        (caller tx-sender)
+        (existing-dex (unwrap! (map-get? dexes dex-id) ERR_POOL_NOT_FOUND))
+    )
+        (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
+        
+        (map-set dexes dex-id {
+            dex-contract: dex-contract,
+            pre-contract: pre-contract,
+            x-token: x-token,
+            y-token: y-token,
+            x-target: x-target,
+            y-supply: y-supply,
+            price-per-seat: price-per-seat,
+            tokens-per-seat: tokens-per-seat,
+            creation-height: creation-height
+        })
+        
+        (print {
+            action: "edit-dex",
+            caller: caller,
+            dex-id: dex-id,
+            dex-contract: dex-contract,
+            pre-contract: pre-contract,
+            x-token: x-token,
+            y-token: y-token,
+            x-target: x-target,
+            y-supply: y-supply,
+            price-per-seat: price-per-seat,
+            tokens-per-seat: tokens-per-seat,
+            creation-height: creation-height
+        })
+        (ok dex-id)
+    )
+)
+
 (define-public (place-order
     (dex <dex-trait>)
     (token <token-trait>)
     (amount uint)
-    (owner (optional principal))
     (opcode (optional (buff 16))))
   (let (
       (sender tx-sender)
       (operation (get-byte (default-to 0x00 opcode) u0)) 
       (dex-principal (contract-of dex))
-      (dex-info (map-get? dexes dex-principal))
+      (dex-id (map-get? dex-contracts dex-principal))
+      (dex-info (match dex-id
+                    id (map-get? dexes id)
+                    none))
     )
     (match dex-info
         info (begin
                 (if (is-eq operation OP_SWAP_A_TO_B)
-                    (let ((tokens-out (try! (contract-call? dex buy token amount)))
-                          (result tokens-out))
+                    (let ((tokens-out (try! (contract-call? dex buy token amount))))
                          (print {
                             type: "buy",
                             sender: sender,
@@ -379,38 +509,55 @@
                             creation-height: (get creation-height info),
                             dex-contract: dex-principal })
                         (ok ubtc-out))
-                        (if (is-eq operation OP_ADD_LIQUIDITY)
-                            (let ((actual-seats (try! (contract-call? dex buy-up-to amount owner))))
+                        ERR_INVALID_OPERATION
+                    )
+                )
+              )
+        ERR_POOL_NOT_FOUND)))
+
+(define-public (prelaunch
+    (pre <pre-trait>)
+    (seat-count uint)
+    (owner (optional principal))
+    (opcode (optional (buff 16))))
+  (let (
+      (tx-owner (default-to tx-sender owner))
+      (operation (get-byte (default-to 0x02 opcode) u0)) 
+      (pre-principal (contract-of pre))
+      (pre-id (map-get? pre-contracts pre-principal))
+      (pre-info (match pre-id
+                    id (map-get? dexes id)
+                    none))
+    )
+    (match pre-info
+        info (begin
+                (if (is-eq operation OP_ADD_LIQUIDITY)
+                    (let ((actual-seats (try! (contract-call? pre buy-up-to seat-count (some tx-owner)))))
+                        (print {
+                            type: "buy-seats",
+                            sender: tx-owner,
+                            token-in: (get x-token info),
+                            amount-in: (* actual-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
+                            token-out: (get y-token info),
+                            amount-out: (* actual-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
+                            x-target: (get x-target info),
+                            y-supply: (get y-supply info),
+                            creation-height: (get creation-height info),
+                            pre-contract: pre-principal })
+                        (ok actual-seats))
+                    (if (is-eq operation OP_REMOVE_LIQUIDITY)
+                        (let ((user-seats (try! (contract-call? pre refund (some tx-owner)))))
                             (print {
-                                type: "buy-seats",
-                                sender: (default-to tx-sender owner),
-                                token-in: (get x-token info),
-                                amount-in: (* actual-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
-                                token-out: (get y-token info),
-                                amount-out: (* actual-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
+                                type: "refund-seats",
+                                sender: tx-owner,
+                                token-in: (get y-token info),
+                                amount-in: (* user-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
+                                token-out: (get x-token info),
+                                amount-out: (* user-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
                                 x-target: (get x-target info),
                                 y-supply: (get y-supply info),
                                 creation-height: (get creation-height info),
-                                dex-contract: dex-principal })
-                            (ok actual-seats))
-                            (if (is-eq operation OP_REMOVE_LIQUIDITY)
-                                (let ((user-seats (try! (contract-call? dex refund owner))))
-                                (print {
-                                    type: "refund-seats",
-                                    sender: (default-to tx-sender owner),
-                                    token-in: (get y-token info),
-                                    amount-in: (* user-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
-                                    token-out: (get x-token info),
-                                    amount-out: (* user-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
-                                    x-target: (get x-target info),
-                                    y-supply: (get y-supply info),
-                                    creation-height: (get creation-height info),
-                                    dex-contract: dex-principal })
-                                (ok user-seats))
-                                (asserts! false ERR_INVALID_OPERATION)  
-                            )
-                        )
-                    )
-                )
-        )
-    (asserts! false ERR_POOL_NOT_FOUND))))
+                                pre-contract: pre-principal })
+                            (ok user-seats))
+                        ERR_INVALID_OPERATION)))
+        ERR_POOL_NOT_FOUND)))

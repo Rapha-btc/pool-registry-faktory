@@ -147,3 +147,6 @@ Expected Flow:
 
 // https://stxer.xyz/simulations/mainnet/35a8aa5cd9afd37bc74df0d0c51e6bfb
 // all green
+
+// https://stxer.xyz/simulations/mainnet/c65395f572586dfd098921bfa7b396b3
+// showing beautiful logs for indexers
