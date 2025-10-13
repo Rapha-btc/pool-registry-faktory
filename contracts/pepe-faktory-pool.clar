@@ -29,7 +29,7 @@
 (define-fungible-token sBTC-PEPE)
 (define-data-var token-uri (optional (string-utf8 256)) none)
 
-(define-data-var gated bool false)
+(define-data-var gated bool true)
 
 ;; --- SIP10 Functions ---
 
@@ -97,7 +97,7 @@
       (sender tx-sender)
       (operation (get-byte (default-to 0x00 opcode) u0))
     )
-    (and (var-get gated) (asserts! (is-approved-caller) ERR_NOT_AUTHORIZED))
+    (and (var-get gated) (asserts! (is-approved-caller) ERR_UNAUTHORIZED))
     (if (is-eq operation OP_SWAP_A_TO_B)
       (swap-a-to-b amount u0)
       (if (is-eq operation OP_SWAP_B_TO_A)
@@ -383,14 +383,14 @@
 
 (define-public (approve-caller (caller principal))
   (begin
-    (asserts! (is-eq tx-sender DEPLOYER) ERR_NOT_AUTHORIZED)
+    (asserts! (is-eq tx-sender DEPLOYER) ERR_UNAUTHORIZED)
     (ok (map-set approved-callers caller true))
   )
 )
 
 (define-public (revoke-caller (caller principal))
   (begin
-    (asserts! (is-eq tx-sender DEPLOYER) ERR_NOT_AUTHORIZED)
+    (asserts! (is-eq tx-sender DEPLOYER) ERR_UNAUTHORIZED)
     (ok (map-set approved-callers caller false))
   )
 )
@@ -404,7 +404,7 @@
 
 (define-public (set-gated (enabled bool))
   (begin
-    (asserts! (is-eq tx-sender DEPLOYER) ERR_NOT_AUTHORIZED)
+    (asserts! (is-eq tx-sender DEPLOYER) ERR_UNAUTHORIZED)
     (ok (var-set gated enabled))
   )
 )
