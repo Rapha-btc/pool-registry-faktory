@@ -26,6 +26,8 @@ import { SimulationBuilder } from "stxer";
 // Define addresses
 const DEPLOYER = "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM";
 const SBTC_USER = "SP2QGMXH21KFDX99PWNB7Z7WNQ92TWFAECEEK10GE"; // Has sBTC & seats
+const SBTC_USER_2 = "SP1DZARHA1GVEWVCDF1J9N044A69Q6VT7KMDPQ5N9"; // Has sBTC ✅
+
 const RANDOM_USER = "SP1K1A1PMGW2ZJCNF46NWZWHG8TS1D23EGH1KNK60";
 
 // Token addresses
@@ -128,7 +130,7 @@ SimulationBuilder.new()
     function_name: "prelaunch",
     function_args: [
       contractPrincipalCV(DEPLOYER, "fakememe-pre-faktory"),
-      uintCV(3), // buy 3 seats
+      uintCV(1), // buy 3 seats
       noneCV(), // owner defaults to tx-sender
       someCV(OP_ADD_LIQUIDITY),
     ],
@@ -141,9 +143,36 @@ SimulationBuilder.new()
     function_name: "prelaunch",
     function_args: [
       contractPrincipalCV(DEPLOYER, "fakememe-pre-faktory"),
-      uintCV(5), // buy 5 seats
+      uintCV(1), // buy 5 seats
       someCV(contractPrincipalCV(DEPLOYER, "faktory-account-v1")), // 🔑 agent account as owner
       someCV(OP_ADD_LIQUIDITY),
+    ],
+  })
+
+  // ===== ERROR TESTS - Unauthorized account usage =====
+
+  // SBTC_USER_2 tries to buy seats using faktory-account-v1 (should fail - not the owner)
+  .withSender(SBTC_USER_2)
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "prelaunch",
+    function_args: [
+      contractPrincipalCV(DEPLOYER, "fakememe-pre-faktory"),
+      uintCV(1), // try to buy 2 seats
+      someCV(contractPrincipalCV(DEPLOYER, "faktory-account-v1")), // 🚫 unauthorized user trying to use account
+      someCV(OP_ADD_LIQUIDITY),
+    ],
+  })
+
+  // SBTC_USER_2 tries to refund seats from faktory-account-v1 (should fail - not the owner)
+  .addContractCall({
+    contract_id: `${DEPLOYER}.faktory-pool-registry`,
+    function_name: "prelaunch",
+    function_args: [
+      contractPrincipalCV(DEPLOYER, "fakememe-pre-faktory"),
+      uintCV(0), // seat-count ignored for refund
+      someCV(contractPrincipalCV(DEPLOYER, "faktory-account-v1")), // 🚫 unauthorized user trying to refund from account
+      someCV(OP_REMOVE_LIQUIDITY),
     ],
   })
 
@@ -255,3 +284,7 @@ as the owner parameter to test agent account integration! 🎯
 
 // all green https://stxer.xyz/simulations/mainnet/9958c4d649f033ce143433ab4718b876
 // now let's try and prelaunch buy
+
+// all gud https://stxer.xyz/simulations/mainnet/4d735862c576b4627c0586beacf1e6ca
+// https://stxer.xyz/simulations/mainnet/bc65ad007a62080509f601bf8a5edbad
+// all green but do we want to make seat-count optional?
