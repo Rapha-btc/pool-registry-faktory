@@ -328,6 +328,7 @@
 
 (define-map dexes uint {
     dex-contract: principal,
+    pre-contract: principal,
     x-token: principal,
     y-token: principal,
     x-target: uint,
@@ -339,6 +340,7 @@
 )
 
 (define-map dex-contracts principal uint)
+(define-map pre-contracts principal uint)
 
 (define-read-only (get-last-dex-id)
    (var-get last-dex-id)
@@ -355,8 +357,16 @@
     )
 )
 
+(define-read-only (get-pre-by-contract (pre-contract principal))
+    (match (map-get? pre-contracts pre-contract)
+        dex-id (map-get? dexes dex-id)
+        none
+    )
+)
+
 (define-public (register-dex
     (dex-contract principal)
+    (pre-contract principal)
     (x-token principal)
     (y-token principal)
     (x-target uint)
@@ -371,9 +381,11 @@
     )
         (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
         (asserts! (is-none (map-get? dex-contracts dex-contract)) ERR_POOL_ALREADY_EXISTS)
-        
+        (asserts! (is-none (map-get? pre-contracts pre-contract)) ERR_POOL_ALREADY_EXISTS)
+
         (map-set dexes new-dex-id {
             dex-contract: dex-contract,
+            pre-contract: pre-contract,
             x-token: x-token,
             y-token: y-token,
             x-target: x-target,
@@ -384,6 +396,7 @@
         })
         
         (map-set dex-contracts dex-contract new-dex-id)
+        (map-set pre-contracts pre-contract new-dex-id)
         (var-set last-dex-id new-dex-id)
         
         (print {
@@ -391,6 +404,7 @@
             caller: caller,
             dex-id: new-dex-id,
             dex-contract: dex-contract,
+            pre-contract: pre-contract,
             x-token: x-token,
             y-token: y-token,
             x-target: x-target,
@@ -406,6 +420,7 @@
 (define-public (edit-dex
     (dex-id uint)
     (dex-contract principal)
+    (pre-contract principal)
     (x-token principal)
     (y-token principal)
     (x-target uint)
@@ -422,6 +437,7 @@
         
         (map-set dexes dex-id {
             dex-contract: dex-contract,
+            pre-contract: pre-contract,
             x-token: x-token,
             y-token: y-token,
             x-target: x-target,
@@ -436,6 +452,7 @@
             caller: caller,
             dex-id: dex-id,
             dex-contract: dex-contract,
+            pre-contract: pre-contract,
             x-token: x-token,
             y-token: y-token,
             x-target: x-target,
@@ -507,7 +524,7 @@
       (sender tx-sender)
       (operation (get-byte (default-to 0x00 opcode) u0)) 
       (pre-principal (contract-of pre))
-      (pre-id (map-get? dex-contracts pre-principal))
+      (pre-id (map-get? pre-contracts pre-principal))
       (pre-info (match pre-id
                     id (map-get? dexes id)
                     none))
