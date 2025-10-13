@@ -18,8 +18,9 @@
 (use-trait pre-trait 'SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B.prelaunch-faktory-trait.prelaunch-trait)
 (use-trait token-trait 'SP3XXMS38VTAWTVPE5682XSBFXPTH7XCPEBTX8AN2.faktory-trait-v1.sip-010-trait)
 
-
 (define-constant DEPLOYER tx-sender)
+
+(define-data-var gated bool false)
 
 (define-data-var last-pool-id uint u0)
 
@@ -248,6 +249,7 @@
         (result (try! (contract-call? pool-contract execute amount opcode)))
         (reserves-after (unwrap! (contract-call? pool-contract quote u0 (some OP_LOOKUP_RESERVES)) ERROR_RESERVES))
     )
+    (and (var-get gated) (asserts! (is-approved-caller) ERR_NOT_AUTHORIZED))
         (match pool-info
     info (begin
         (if (is-eq operation OP_SWAP_A_TO_B)
@@ -515,7 +517,7 @@
               )
         ERR_POOL_NOT_FOUND)))
 
-(define-public (prelaunch
+(define-public (process
     (pre <pre-trait>)
     (seat-count uint)
     (owner (optional principal))
@@ -561,3 +563,37 @@
                             (ok user-seats))
                         ERR_INVALID_OPERATION)))
         ERR_POOL_NOT_FOUND)))
+
+(define-map approved-callers principal bool)
+
+(define-public (approve-caller (caller principal))
+  (begin
+    (asserts! (is-eq tx-sender DEPLOYER) ERR_NOT_AUTHORIZED)
+    (ok (map-set approved-callers caller true))
+  )
+)
+
+(define-public (revoke-caller (caller principal))
+  (begin
+    (asserts! (is-eq tx-sender DEPLOYER) ERR_NOT_AUTHORIZED)
+    (ok (map-set approved-callers caller false))
+  )
+)
+
+(define-private (is-approved-caller)
+  (or
+    (is-eq tx-sender contract-caller) 
+    (default-to false (map-get? approved-callers contract-caller)) 
+  )
+)
+
+(define-public (set-gated (enabled bool))
+  (begin
+    (asserts! (is-eq tx-sender DEPLOYER) ERR_NOT_AUTHORIZED)
+    (ok (var-set gated enabled))
+  )
+)
+
+(define-read-only (is-gated)
+  (var-get gated)
+)
