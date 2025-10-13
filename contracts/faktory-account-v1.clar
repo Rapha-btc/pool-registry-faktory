@@ -533,4 +533,6 @@
           owner: OWNER })
 )
 
-(try! (contract-call? .account-registry auto-register-agent-account OWNER AGENT))
+(begin
+(try! (contract-call? .faktory-account-registry auto-register-account OWNER AGENT))
+(ok true))

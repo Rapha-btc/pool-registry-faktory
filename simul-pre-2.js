@@ -252,3 +252,6 @@ as the owner parameter to test agent account integration! 🎯
 */
 
 // https://stxer.xyz/simulations/mainnet/dd322908388243ba841ee1ced136bdcc
+
+// all green https://stxer.xyz/simulations/mainnet/9958c4d649f033ce143433ab4718b876
+// now let's try and prelaunch buy

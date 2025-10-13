@@ -1,4 +1,4 @@
-(impl-trait 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.prelaunch-agent-faktory-trait.prelaunch-trait)
+(impl-trait 'SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B.prelaunch-faktory-trait.prelaunch-trait)
 
 ;; SP2Z94F6QX847PMXTPJJ2ZCCN79JZDW3PJ4E6ZABY.fake-pre-faktory
 ;; 44fc3d8d8c75912d77e48b3a0ef0589ebbd0de53e404c46f19d17a51c1147b83
@@ -205,9 +205,9 @@
             ;; look at circular issues in registration later -> register owner as agent when it's registered as owner of an agent
             (asserts! (or 
                 (is-eq tx-sender seat-owner)  ;; Direct seat owner
-                (match (contract-call? .account-registry get-account-info seat-owner)
+                (match (contract-call? .faktory-account-registry get-account-info seat-owner)
                     agent-info (is-eq tx-sender (get owner agent-info))  ;; tx-sender owns the agent account
-                    none false  ;; seat-owner is not an agent account
+                    false  ;; seat-owner is not an agent account
                 )
             ) ERR-NOT-AUTHORIZED)
 
