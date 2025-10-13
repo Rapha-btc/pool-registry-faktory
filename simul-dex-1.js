@@ -65,9 +65,9 @@ SimulationBuilder.new()
       principalCV("SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"),
       principalCV("SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.bethresen-faktory"),
       uintCV(21000000),
-      uintCV(100000000000000000),
+      uintCV(100000000000000000n),
       someCV(uintCV(69000)),
-      someCV(uintCV(1000000000000000)),
+      someCV(uintCV(1000000000000000n)),
       uintCV(876543), // creation burn block height
     ],
   })
@@ -86,9 +86,9 @@ SimulationBuilder.new()
       principalCV("SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"),
       principalCV("SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakoon-faktory"),
       uintCV(21000000),
-      uintCV(100000000000000000),
+      uintCV(100000000000000000n),
       someCV(uintCV(69000)),
-      someCV(uintCV(1000000000000000)),
+      someCV(uintCV(1000000000000000n)),
       uintCV(876544), // creation burn block height
     ],
   })
@@ -111,9 +111,9 @@ SimulationBuilder.new()
       principalCV(SBTC_TOKEN),
       principalCV("SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.bethresen-faktory"),
       uintCV(21000000),
-      uintCV(100000000000000000),
+      uintCV(100000000000000000n),
       someCV(uintCV(69000)),
-      someCV(uintCV(1000000000000000)),
+      someCV(uintCV(1000000000000000n)),
       uintCV(876543),
     ],
   })
@@ -152,9 +152,9 @@ SimulationBuilder.new()
       principalCV(SBTC_TOKEN),
       principalCV("SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.bethresen-faktory"),
       uintCV(22000000), // updated x-target
-      uintCV(100000000000000000),
+      uintCV(100000000000000000n),
       someCV(uintCV(70000)), // updated price
-      someCV(uintCV(1000000000000000)),
+      someCV(uintCV(1000000000000000n)),
       uintCV(876543),
     ],
   })

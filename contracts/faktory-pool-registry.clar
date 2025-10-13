@@ -521,8 +521,8 @@
     (owner (optional principal))
     (opcode (optional (buff 16))))
   (let (
-      (sender tx-sender)
-      (operation (get-byte (default-to 0x00 opcode) u0)) 
+      (tx-owner (default-to tx-sender owner))
+      (operation (get-byte (default-to 0x02 opcode) u0)) 
       (pre-principal (contract-of pre))
       (pre-id (map-get? pre-contracts pre-principal))
       (pre-info (match pre-id
@@ -532,10 +532,10 @@
     (match pre-info
         info (begin
                 (if (is-eq operation OP_ADD_LIQUIDITY)
-                    (let ((actual-seats (try! (contract-call? pre buy-up-to seat-count owner))))
+                    (let ((actual-seats (try! (contract-call? pre buy-up-to seat-count (some tx-owner)))))
                         (print {
                             type: "buy-seats",
-                            sender: (default-to tx-sender owner),
+                            sender: tx-owner,
                             token-in: (get x-token info),
                             amount-in: (* actual-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
                             token-out: (get y-token info),
@@ -546,10 +546,10 @@
                             pre-contract: pre-principal })
                         (ok actual-seats))
                     (if (is-eq operation OP_REMOVE_LIQUIDITY)
-                        (let ((user-seats (try! (contract-call? pre refund owner))))
+                        (let ((user-seats (try! (contract-call? pre refund (some tx-owner)))))
                             (print {
                                 type: "refund-seats",
-                                sender: (default-to tx-sender owner),
+                                sender: tx-owner,
                                 token-in: (get y-token info),
                                 amount-in: (* user-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
                                 token-out: (get x-token info),
