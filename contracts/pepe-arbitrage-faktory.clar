@@ -195,3 +195,129 @@
     (ok (get dy result))
   )
 )
+
+;; Read-only 
+(define-read-only (check-arb-fak (pepe-in uint))
+  (let (
+    (sbtc-estimate (simulate-pepe-to-sbtc pepe-in))
+    (stx-estimate (simulate-sbtc-to-stx sbtc-estimate))
+    (pepe-estimate (simulate-stx-to-pepe stx-estimate))
+    (profit (if (> pepe-estimate pepe-in) (- pepe-estimate pepe-in) u0))
+  )
+  (ok {
+    pepe-in: pepe-in,
+    sbtc-out: sbtc-estimate,
+    stx-out: stx-estimate,
+    pepe-out: pepe-estimate,
+    profit: profit,
+    profitable: (> pepe-estimate pepe-in)
+  }))
+)
+
+(define-read-only (check-arb-velar (pepe-in uint))
+  (let (
+    (stx-estimate (simulate-pepe-to-stx pepe-in))
+    (sbtc-estimate (simulate-stx-to-sbtc stx-estimate))
+    (pepe-estimate (simulate-sbtc-to-pepe sbtc-estimate))
+    (profit (if (> pepe-estimate pepe-in) (- pepe-estimate pepe-in) u0))
+  )
+  (ok {
+    pepe-in: pepe-in,
+    stx-out: stx-estimate,
+    sbtc-out: sbtc-estimate,
+    pepe-out: pepe-estimate,
+    profit: profit,
+    profitable: (> pepe-estimate pepe-in)
+  }))
+)
+
+(define-read-only (simulate-pepe-to-sbtc (pepe-amount uint))
+  (get dy (unwrap-panic (contract-call? 
+    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool
+    quote
+    pepe-amount
+    (some 0x01) 
+  )))
+)
+
+(define-read-only (simulate-sbtc-to-stx (sbtc-amount uint))
+  (let (
+      (pool (unwrap-panic (contract-call?
+        'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1
+        get-pool
+      )))
+      (x-balance (get x-balance pool))
+      (y-balance (get y-balance pool))
+      (protocol-fee (get x-protocol-fee pool))
+      (provider-fee (get x-provider-fee pool))
+      (BPS u10000)
+      (x-amount-fees-protocol (/ (* sbtc-amount protocol-fee) BPS))
+      (x-amount-fees-provider (/ (* sbtc-amount provider-fee) BPS))
+      (x-amount-fees-total (+ x-amount-fees-protocol x-amount-fees-provider))
+      (dx (- sbtc-amount x-amount-fees-total))
+      (updated-x-balance (+ x-balance dx))
+      (dy (/ (* y-balance dx) updated-x-balance))
+    )
+    dy
+  )
+)
+
+(define-read-only (simulate-stx-to-pepe (stx-amount uint))
+  ;; Calculate manually using pool reserves
+  (let ((pool (unwrap-panic (contract-call? 
+          'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
+          get-pool 
+          VELAR-POOL-ID)))
+        (r0 (get reserve0 pool))
+        (r1 (get reserve1 pool))
+        (swap-fee (get swap-fee pool))
+        (amt-in-adjusted (/ (* stx-amount (get num swap-fee)) (get den swap-fee)))
+        (amt-out (/ (* r1 amt-in-adjusted) (+ r0 amt-in-adjusted)))
+  )
+  amt-out)
+)
+
+(define-read-only (simulate-pepe-to-stx (pepe-amount uint))
+  (let ((pool (unwrap-panic (contract-call? 
+          'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
+          get-pool 
+          VELAR-POOL-ID)))
+        (r0 (get reserve0 pool))
+        (r1 (get reserve1 pool))
+        (swap-fee (get swap-fee pool))
+        (amt-in-adjusted (/ (* pepe-amount (get num swap-fee)) (get den swap-fee)))
+        (amt-out (/ (* r0 amt-in-adjusted) (+ r1 amt-in-adjusted)))
+  )
+  amt-out)
+)
+
+(define-read-only (simulate-stx-to-sbtc (stx-amount uint))
+  (let (
+      (pool (unwrap-panic (contract-call?
+        'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1
+        get-pool
+      )))
+      (x-balance (get x-balance pool))
+      (y-balance (get y-balance pool))
+      (protocol-fee (get y-protocol-fee pool))
+      (provider-fee (get y-provider-fee pool))
+      (BPS u10000)
+      (y-amount-fees-protocol (/ (* stx-amount protocol-fee) BPS))
+      (y-amount-fees-provider (/ (* stx-amount provider-fee) BPS))
+      (y-amount-fees-total (+ y-amount-fees-protocol y-amount-fees-provider))
+      (dy (- stx-amount y-amount-fees-total))
+      (updated-y-balance (+ y-balance dy))
+      (dx (/ (* x-balance dy) updated-y-balance))
+    )
+    dx
+  )
+)
+
+(define-read-only (simulate-sbtc-to-pepe (sbtc-amount uint))
+  (get dy (unwrap-panic (contract-call? 
+    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool
+    quote
+    sbtc-amount
+    (some 0x00) 
+  )))
+)
