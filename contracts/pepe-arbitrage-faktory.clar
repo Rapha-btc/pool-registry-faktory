@@ -9,7 +9,7 @@
 
 (define-constant VELAR-POOL-ID u11)
 
-(define-public (arb-sell-fak
+(define-public (arb-fak-bit-vel
     (pepe-in uint)
     (min-pepe-out uint))
   (begin
@@ -56,7 +56,7 @@
 (define-private (swap-pepe-to-sbtc (pepe-amount uint))
   (let (
       (result (try! (contract-call? 
-        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool
+        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool-v2
         execute
         pepe-amount
         (some 0x01) 
@@ -101,7 +101,7 @@
   )
 )
 
-(define-public (arb-sell-fak-velar
+(define-public (arb-fak-vel-vel
     (pepe-in uint)
     (min-pepe-out uint))
   (begin
@@ -146,7 +146,7 @@
     )
 
 ;; REVEEEEEERSE
-(define-public (arb-sell-velar
+(define-public (arb-vel-bit-fak
     (pepe-in uint)
     (min-pepe-out uint))
   (begin
@@ -230,7 +230,7 @@
 (define-private (swap-sbtc-to-pepe (sbtc-amount uint))
   (let (
       (result (try! (contract-call?
-        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool
+        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool-v2
         execute
         sbtc-amount
         (some 0x00) 
@@ -240,7 +240,7 @@
   )
 )
 
-(define-public (arb-sell-velar-velar
+(define-public (arb-vel-vel-fak
     (pepe-in uint)
     (min-pepe-out uint))
   (begin
@@ -317,7 +317,7 @@
 )
 
 ;; Read-only 
-(define-read-only (check-arb-fak (pepe-in uint))
+(define-read-only (check-fak-bit-vel (pepe-in uint))
   (let (
     (sbtc-estimate (simulate-pepe-to-sbtc pepe-in))
     (stx-estimate (simulate-sbtc-to-stx sbtc-estimate))
@@ -334,7 +334,7 @@
   }))
 )
 
-(define-read-only (check-arb-velar (pepe-in uint))
+(define-read-only (check-vel-bit-fak (pepe-in uint))
   (let (
     (stx-estimate (simulate-pepe-to-stx pepe-in))
     (sbtc-estimate (simulate-stx-to-sbtc stx-estimate))
@@ -353,7 +353,7 @@
 
 (define-read-only (simulate-pepe-to-sbtc (pepe-amount uint))
   (get dy (unwrap-panic (contract-call? 
-    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool
+    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool-v2
     quote
     pepe-amount
     (some 0x01) 
@@ -434,7 +434,7 @@
 
 (define-read-only (simulate-sbtc-to-pepe (sbtc-amount uint))
   (get dy (unwrap-panic (contract-call? 
-    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool
+    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool-v2
     quote
     sbtc-amount
     (some 0x00) 
@@ -467,7 +467,7 @@
   amt-out)
 )
 
-(define-read-only (check-arb-fak-velar (pepe-in uint))
+(define-read-only (check-fak-vel-vel (pepe-in uint))
   (let (
     (sbtc-estimate (simulate-pepe-to-sbtc pepe-in))
     (stx-estimate (simulate-sbtc-to-stx-velar sbtc-estimate))
@@ -484,7 +484,7 @@
   }))
 )
 
-(define-read-only (check-arb-velar-velar (pepe-in uint))
+(define-read-only (check-vel-vel-fak (pepe-in uint))
   (let (
     (stx-estimate (simulate-pepe-to-stx pepe-in))
     (sbtc-estimate (simulate-stx-to-sbtc-velar stx-estimate))
