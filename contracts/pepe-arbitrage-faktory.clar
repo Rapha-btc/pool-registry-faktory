@@ -1,5 +1,5 @@
 ;; Arbitrage: PEPE -> sBTC -> STX -> PEPE
-;; Uses: Charisma, Bitflow, Velar
+;; Uses: Fakfun, Bitflow, Velar
 
 (define-constant ERR-SLIPPAGE (err u1000))
 (define-constant ERR-NO-PROFIT (err u1001))
@@ -7,17 +7,9 @@
 (define-constant CONTRACT (as-contract tx-sender))
 (define-constant SAINT 'SP000000000000000000002Q6VF78)
 
-;; Token addresses
-(define-constant PEPE 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz)
-(define-constant SBTC 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token)
-(define-constant WSTX 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx)
-(define-constant STX-TOKEN 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2)
-
-;; Pool addresses
-(define-constant CHARISMA-POOL 'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool)
 (define-constant VELAR-POOL-ID u11)
 
-;; Main arb function: PEPE -> sBTC -> STX -> PEPE
+;; PEPE -> sBTC -> STX -> PEPE
 (define-public (arb-sell-fak
     (pepe-in uint)
     (min-pepe-out uint))
@@ -62,21 +54,19 @@
       )
     )
 
-;; Step 1: PEPE -> sBTC via Charisma
 (define-private (swap-pepe-to-sbtc (pepe-amount uint))
   (let (
       (result (try! (contract-call? 
         'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.pepe-faktory-pool
         execute
         pepe-amount
-        (some 0x01) ;; OP_SWAP_B_TO_A (PEPE to sBTC)
+        (some 0x01) 
       )))
     )
     (ok (get dy result))
   )
 )
 
-;; Step 2: sBTC -> STX via Bitflow
 (define-private (swap-sbtc-to-stx (sbtc-amount uint))
   (let (
       (dy (try! (contract-call?
