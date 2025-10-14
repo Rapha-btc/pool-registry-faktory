@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { uintCV, principalCV, ClarityVersion } from "@stacks/transactions";
+import { uintCV, ClarityVersion } from "@stacks/transactions";
 import { SimulationBuilder } from "stxer";
 
 // Define addresses
@@ -22,29 +22,27 @@ SimulationBuilder.new()
     clarity_version: ClarityVersion.Clarity3,
   })
 
-  // ===== TEST ARBITRAGE: PEPE -> sBTC -> STX -> PEPE =====
   .withSender(PEPE_USER)
+
+  // ===== TEST ROUTE 1: PEPE -> sBTC -> STX -> PEPE =====
   .addContractCall({
     contract_id: `${DEPLOYER}.pepe-arbitrage-faktory`,
     function_name: "arb-sell-fak",
     function_args: [
       uintCV(TEN_MILLION_PEPE), // 10M PEPE (with 3 decimals)
-      uintCV(1), // min-pepe-out = 1 (just needs to complete, we'll check profit)
+      uintCV(1), // min-pepe-out = 1
     ],
   })
 
-  // ===== OPTIONAL: TEST REVERSE ROUTE =====
-  // Uncomment if you want to also test the reverse arbitrage
-  /*
+  // ===== TEST ROUTE 2: PEPE -> STX -> sBTC -> PEPE =====
   .addContractCall({
     contract_id: `${DEPLOYER}.pepe-arbitrage-faktory`,
     function_name: "arb-sell-velar",
     function_args: [
       uintCV(TEN_MILLION_PEPE), // 10M PEPE
-      uintCV(1), // min-pepe-out
+      uintCV(1), // min-pepe-out = 1
     ],
   })
-  */
 
   .run()
   .catch(console.error);
@@ -53,18 +51,23 @@ SimulationBuilder.new()
 Expected Results:
 
 ✅ Deploy pepe-arbitrage-faktory contract
-✅ Execute arb-sell-fak with 10M PEPE:
+
+✅ TEST 1 - arb-sell-fak (PEPE -> sBTC -> STX -> PEPE):
    - Route: PEPE -> sBTC (Charisma) -> STX (Bitflow) -> PEPE (Velar)
-   - Returns: { pepe-in, pepe-out, profit }
-   - Should either succeed with profit or fail with ERR-NO-PROFIT (u1001)
+   - Returns: { pepe-in, pepe-out, burnt-pepe }
+   - Check the burnt-pepe amount to see profit
+
+✅ TEST 2 - arb-sell-velar (PEPE -> STX -> sBTC -> PEPE):
+   - Route: PEPE -> STX (Velar) -> sBTC (Bitflow) -> PEPE (Charisma)
+   - Returns: { pepe-in, pepe-out, burnt-pepe }
+   - Check the burnt-pepe amount to see profit
+
+Compare both routes to see which is more profitable!
 
 The arbitrage will:
-1. Swap 10M PEPE → sBTC via Charisma Faktory pool
-2. Swap sBTC → STX via Bitflow xyk pool  
-3. Swap STX → PEPE via Velar (wrapping/unwrapping WSTX)
-4. Check if pepe-out > pepe-in (profit check)
-5. Check if pepe-out >= min-pepe-out (slippage check)
+1. Execute both routes with the same 10M PEPE input
+2. Return profit breakdown for each
+3. Show which direction has better rates
 
-If profitable, returns the profit amount.
-If not, reverts with ERR-NO-PROFIT.
+If either route is not profitable, it will revert with ERR-NO-PROFIT (u1001).
 */
