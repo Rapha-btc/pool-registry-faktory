@@ -32,28 +32,38 @@ const builder = SimulationBuilder.new()
 
   .withSender(PEPE_USER);
 
-// ===== SIMULATE ALL AMOUNTS FOR BOTH ROUTES =====
-console.log("\n=== SIMULATING ARBITRAGE OPPORTUNITIES ===\n");
+// ===== SIMULATE ALL AMOUNTS FOR ALL 4 ROUTES =====
+console.log("\n=== SIMULATING ARBITRAGE OPPORTUNITIES (ALL 4 ROUTES) ===\n");
 
 for (const amount of amounts) {
   builder
-    // Simulate Route 1: PEPE -> sBTC -> STX -> PEPE
+    // Route 1: PEPE -> sBTC (Faktory) -> STX (Bitflow) -> PEPE (Velar)
     .addEvalCode(
       `${DEPLOYER}.pepe-arbitrage-faktory`,
       `(check-arb-fak u${amount})`
     )
-    // Simulate Route 2: PEPE -> STX -> sBTC -> PEPE
+    // Route 2: PEPE -> STX (Velar) -> sBTC (Bitflow) -> PEPE (Faktory)
     .addEvalCode(
       `${DEPLOYER}.pepe-arbitrage-faktory`,
       `(check-arb-velar u${amount})`
+    )
+    // Route 3: PEPE -> sBTC (Faktory) -> STX (Velar u70) -> PEPE (Velar)
+    .addEvalCode(
+      `${DEPLOYER}.pepe-arbitrage-faktory`,
+      `(check-arb-fak-velar u${amount})`
+    )
+    // Route 4: PEPE -> STX (Velar) -> sBTC (Velar u70) -> PEPE (Faktory)
+    .addEvalCode(
+      `${DEPLOYER}.pepe-arbitrage-faktory`,
+      `(check-arb-velar-velar u${amount})`
     );
 }
 
-// ===== EXECUTE ACTUAL ARBITRAGE WITH 1.2M PEPE =====
-const EXECUTION_AMOUNT = 1200000000n;
+// ===== EXECUTE ACTUAL ARBITRAGE WITH 12M PEPE ON ALL 4 ROUTES =====
+const EXECUTION_AMOUNT = 12000000000n;
 
 builder
-  // ===== TEST ROUTE 1: PEPE -> sBTC -> STX -> PEPE =====
+  // ===== TEST ROUTE 1: PEPE -> sBTC (Faktory) -> STX (Bitflow) -> PEPE =====
   .addContractCall({
     contract_id: `${DEPLOYER}.pepe-arbitrage-faktory`,
     function_name: "arb-sell-fak",
@@ -63,10 +73,30 @@ builder
     ],
   })
 
-  // ===== TEST ROUTE 2: PEPE -> STX -> sBTC -> PEPE =====
+  // ===== TEST ROUTE 2: PEPE -> STX (Velar) -> sBTC (Bitflow) -> PEPE =====
   .addContractCall({
     contract_id: `${DEPLOYER}.pepe-arbitrage-faktory`,
     function_name: "arb-sell-velar",
+    function_args: [
+      uintCV(EXECUTION_AMOUNT),
+      uintCV(1), // min-pepe-out = 1
+    ],
+  })
+
+  // ===== TEST ROUTE 3: PEPE -> sBTC (Faktory) -> STX (Velar u70) -> PEPE =====
+  .addContractCall({
+    contract_id: `${DEPLOYER}.pepe-arbitrage-faktory`,
+    function_name: "arb-sell-fak-velar",
+    function_args: [
+      uintCV(EXECUTION_AMOUNT),
+      uintCV(1), // min-pepe-out = 1
+    ],
+  })
+
+  // ===== TEST ROUTE 4: PEPE -> STX (Velar) -> sBTC (Velar u70) -> PEPE =====
+  .addContractCall({
+    contract_id: `${DEPLOYER}.pepe-arbitrage-faktory`,
+    function_name: "arb-sell-velar-velar",
     function_args: [
       uintCV(EXECUTION_AMOUNT),
       uintCV(1), // min-pepe-out = 1
@@ -81,30 +111,57 @@ Expected Results:
 
 ✅ Deploy pepe-arbitrage-faktory contract
 
-✅ SIMULATIONS (for each amount):
-   - check-arb-fak returns: { pepe-in, sbtc-out, stx-out, pepe-out, profit, profitable }
-   - check-arb-velar returns: { pepe-in, stx-out, sbtc-out, pepe-out, profit, profitable }
+✅ SIMULATIONS (for each amount, 4 routes each):
+   
+   Route 1 - check-arb-fak: 
+     { pepe-in, sbtc-out, stx-out, pepe-out, profit, profitable }
+     PEPE -> sBTC (Faktory) -> STX (Bitflow) -> PEPE (Velar)
+   
+   Route 2 - check-arb-velar: 
+     { pepe-in, stx-out, sbtc-out, pepe-out, profit, profitable }
+     PEPE -> STX (Velar) -> sBTC (Bitflow) -> PEPE (Faktory)
+   
+   Route 3 - check-arb-fak-velar: 
+     { pepe-in, sbtc-out, stx-out, pepe-out, profit, profitable }
+     PEPE -> sBTC (Faktory) -> STX (Velar u70) -> PEPE (Velar)
+   
+   Route 4 - check-arb-velar-velar: 
+     { pepe-in, stx-out, sbtc-out, pepe-out, profit, profitable }
+     PEPE -> STX (Velar) -> sBTC (Velar u70) -> PEPE (Faktory)
    
    Look for:
-   - Which amounts show profitable: true
-   - Which route has higher profit at each amount
+   - Which amounts show profitable: true for each route
+   - Which route has the highest profit at each amount
+   - Compare Bitflow routes vs Velar u70 routes
    - Price impact as amount increases
 
-✅ ACTUAL EXECUTION (12M PEPE):
-   - TEST 1 - arb-sell-fak (PEPE -> sBTC -> STX -> PEPE)
+✅ ACTUAL EXECUTION (12M PEPE on all 4 routes):
+   
+   TEST 1 - arb-sell-fak (Faktory -> Bitflow -> Velar)
      Returns: { pepe-in, pepe-out, burnt-pepe }
    
-   - TEST 2 - arb-sell-velar (PEPE -> STX -> sBTC -> PEPE)
+   TEST 2 - arb-sell-velar (Velar -> Bitflow -> Faktory)
+     Returns: { pepe-in, pepe-out, burnt-pepe }
+   
+   TEST 3 - arb-sell-fak-velar (Faktory -> Velar u70 -> Velar)
+     Returns: { pepe-in, pepe-out, burnt-pepe }
+   
+   TEST 4 - arb-sell-velar-velar (Velar -> Velar u70 -> Faktory)
      Returns: { pepe-in, pepe-out, burnt-pepe }
 
 Analysis:
-1. Check simulations to find the sweet spot amount
-2. Compare profit between routes
-3. Verify actual execution matches simulation
-4. If both fail with ERR-NO-PROFIT, check smaller amounts in simulations
+1. Check simulations to find the sweet spot amount for each route
+2. Compare profit between all 4 routes at each amount
+3. Identify which route is most profitable
+4. See if Velar u70 routes capture more PEPE due to price inefficiency
+5. Verify actual execution matches simulation
+6. If all fail with ERR-NO-PROFIT, check smaller amounts
 
-The simulation results will show you exactly which amounts are profitable
-and by how much, helping you optimize your arbitrage strategy!
+Key Questions Answered:
+- Does Velar u70's shallow liquidity create exploitable price gaps?
+- Do lower fees on Velar u70 (0.3% vs 0.5% Bitflow) offset slippage?
+- Which route burns the most PEPE?
+
+The simulation results will show you exactly which route and amount
+maximizes PEPE capture and burn! 🔥
 */
-
-/// https://stxer.xyz/simulations/mainnet/087c9f4559f989e2a5c3529cb5909c68
