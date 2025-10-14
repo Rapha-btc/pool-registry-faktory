@@ -8,13 +8,13 @@ const PEPE_USER = "SP3YM5YRTKHTWRC82K5DZJBY9XW0K4AX0P9PM5VSH"; // Has PEPE
 
 // Test different amounts to find profitable size
 const amounts = [
-  100000000n, // 100K PEPE
-  500000000n, // 500K PEPE
+  //   100000000n, // 100K PEPE
+  //   500000000n, // 500K PEPE
   1000000000n, // 1M PEPE
-  5000000000n, // 5M PEPE
-  10000000000n, // 10M PEPE
-  12000000000n, // 12M PEPE
-  50000000000n, // 50M PEPE
+  //   5000000000n, // 5M PEPE
+  //   10000000000n, // 10M PEPE
+  //   12000000000n, // 12M PEPE
+  //   50000000000n, // 50M PEPE
 ];
 
 const builder = SimulationBuilder.new()
