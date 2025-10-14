@@ -263,7 +263,6 @@
 )
 
 (define-read-only (simulate-stx-to-pepe (stx-amount uint))
-  ;; Calculate manually using pool reserves
   (let ((pool (unwrap-panic (contract-call? 
           'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
           get-pool 
