@@ -2,6 +2,7 @@
 ;; Uses: Charisma, Bitflow, Velar
 
 (use-trait ft-trait 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
+(use-trait share-fee-to-trait 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-share-fee-to-trait.share-fee-to-trait)
 
 (define-constant ERR-SLIPPAGE (err u1000))
 (define-constant ERR-NO-PROFIT (err u1001))
@@ -98,24 +99,23 @@
   )
 )
 
-;; Step 3: STX -> PEPE via Velar (WSTX is just an interface wrapper for native STX)
+;; Step 3: STX -> PEPE via Velar
 (define-private (swap-stx-to-pepe (stx-amount uint))
   (let (
-      ;; Swap WSTX -> PEPE via Velar
-      ;; Need to pass traits inline, not constants!
       (result (try! (contract-call?
         'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-router
         swap-exact-tokens-for-tokens
         VELAR-POOL-ID
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx ;; token0 - inline trait
-        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz ;; token1 - inline trait  
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx ;; token-in - inline trait
-        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz ;; token-out - inline trait
+        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
+        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz
+        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
+        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz
         'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-share-fee-to
         stx-amount
         u1
       )))
     )
+    ;; Return the amt-out from the event
     (ok (get amt-out result))
   )
 )
@@ -127,7 +127,7 @@
   (let (
       ;; Transfer PEPE from user to contract
       (transfer-in (try! (contract-call? 
-        PEPE 
+        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz 
         transfer 
         pepe-in 
         tx-sender 
@@ -178,10 +178,10 @@
         'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-router
         swap-exact-tokens-for-tokens
         VELAR-POOL-ID
-        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz ;; token0 - PEPE
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx ;; token1 - WSTX
-        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz ;; token-in - PEPE
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx ;; token-out - WSTX
+        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz
+        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
+        'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz
+        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
         'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-share-fee-to
         pepe-amount
         u1
