@@ -320,3 +320,31 @@
     (some 0x00) 
   )))
 )
+
+(define-read-only (simulate-sbtc-to-stx-velar (sbtc-amount uint))
+  (let ((pool (unwrap-panic (contract-call? 
+          'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
+          get-pool 
+          u70)))
+        (r0 (get reserve0 pool)) ;; STX
+        (r1 (get reserve1 pool)) ;; sBTC
+        (swap-fee (get swap-fee pool))
+        (amt-in-adjusted (/ (* sbtc-amount (get num swap-fee)) (get den swap-fee)))
+        (amt-out (/ (* r0 amt-in-adjusted) (+ r1 amt-in-adjusted)))
+  )
+  amt-out)
+)
+
+(define-read-only (simulate-stx-to-sbtc-velar (stx-amount uint))
+  (let ((pool (unwrap-panic (contract-call? 
+          'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
+          get-pool 
+          u70)))
+        (r0 (get reserve0 pool)) ;; STX
+        (r1 (get reserve1 pool)) ;; sBTC
+        (swap-fee (get swap-fee pool))
+        (amt-in-adjusted (/ (* stx-amount (get num swap-fee)) (get den swap-fee)))
+        (amt-out (/ (* r1 amt-in-adjusted) (+ r0 amt-in-adjusted)))
+  )
+  amt-out)
+)
