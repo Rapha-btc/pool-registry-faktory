@@ -1,8 +1,9 @@
+;; b-arbitrage-faktory.clar
 (define-constant ERR-SLIPPAGE (err u1000))
 (define-constant ERR-NO-PROFIT (err u1001))
 
 (define-constant CONTRACT (as-contract tx-sender))
-(define-constant SAINT 'SP000000000000000000002Q6VF78)
+(define-constant SAINT 'SM2JTZ2DHHQFS6J3KVFTPCV72MCN0C03J2ZH6K039)
 
 (define-constant ALEX-POOL-ID u175)
 
