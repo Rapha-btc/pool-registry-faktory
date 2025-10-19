@@ -166,3 +166,6 @@ Key Questions Answered:
 The simulation results will show you exactly which route and amount
 maximizes B Block capture and burn!
 */
+
+// https://stxer.xyz/simulations/mainnet/3be6baada37b019806dfa9faccb468ca
+// all green
