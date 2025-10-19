@@ -375,25 +375,37 @@
 )
 
 (define-read-only (simulate-stx-to-token (stx-amount uint))
-  (unwrap-panic (contract-call?
-    'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
-    get-y-given-x
-    'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
-    'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
-    u100000000
-    stx-amount
-  ))
+  (let (
+      ;; Alex charges 0.5% fee = 500000 (in 8 decimals)
+      (fee (/ (+ (* stx-amount u500000) u99999999) u100000000)) ;; mul-up
+      (stx-net (if (<= stx-amount fee) u0 (- stx-amount fee)))
+    )
+    (unwrap-panic (contract-call?
+      'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+      get-y-given-x
+      'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+      'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+      u100000000
+      stx-net
+    ))
+  )
 )
 
 (define-read-only (simulate-token-to-stx (token-amount uint))
-  (unwrap-panic (contract-call?
-    'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
-    get-x-given-y
-    'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
-    'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
-    u100000000
-    token-amount
-  ))
+  (let (
+      ;; Alex charges 0.5% fee = 500000 (in 8 decimals)
+      (fee (/ (+ (* token-amount u500000) u99999999) u100000000)) ;; mul-up
+      (token-net (if (<= token-amount fee) u0 (- token-amount fee)))
+    )
+    (unwrap-panic (contract-call?
+      'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+      get-x-given-y
+      'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+      'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+      u100000000
+      token-net
+    ))
+  )
 )
 
 (define-read-only (simulate-stx-to-sbtc (stx-amount uint))

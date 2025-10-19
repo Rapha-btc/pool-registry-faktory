@@ -169,3 +169,4 @@ maximizes B Block capture and burn!
 
 // https://stxer.xyz/simulations/mainnet/3be6baada37b019806dfa9faccb468ca
 // all green
+// alex quote net of fees https://stxer.xyz/simulations/mainnet/3d4ee5d60b62742ca99f6c65445dc8d8
