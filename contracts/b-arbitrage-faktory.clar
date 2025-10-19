@@ -4,9 +4,9 @@
 (define-constant CONTRACT (as-contract tx-sender))
 (define-constant SAINT 'SP000000000000000000002Q6VF78)
 
-(define-constant VELAR-POOL-ID u11)
+(define-constant ALEX-POOL-ID u175)
 
-(define-public (arb-fak-bit-vel
+(define-public (arb-fak-bit-alex
     (token-in uint)
     (min-token-out uint))
   (begin
@@ -20,9 +20,9 @@
     ))
     (let ((sbtc-out (try! (as-contract (swap-pepe-to-sbtc token-in))))
           (stx-out (try! (as-contract (swap-sbtc-to-stx sbtc-out))))
-          (token-out (try! (as-contract (swap-stx-to-pepe stx-out))))
-          (pepe-arbitrager tx-sender)
-          (burnt-pepe (if (> token-out token-in) (- token-out token-in) u0)))
+          (token-out (try! (as-contract (swap-stx-to-token stx-out))))
+          (token-arbitrager tx-sender)
+          (burnt-token (if (> token-out token-in) (- token-out token-in) u0)))
           (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
           (asserts! (> token-out token-in) ERR-NO-PROFIT)
           (try! (as-contract (contract-call? 
@@ -30,13 +30,13 @@
             transfer 
             token-in 
             CONTRACT 
-            pepe-arbitrager
+            token-arbitrager
             none
           )))
           (try! (as-contract (contract-call? 
             'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory 
             transfer 
-            burnt-pepe 
+            burnt-token 
             CONTRACT 
             SAINT
             none
@@ -44,7 +44,7 @@
           (ok {
             token-in: token-in,
             token-out: token-out,
-            burnt-pepe: burnt-pepe
+            burnt-token: burnt-token
           })
         )
       )
@@ -79,26 +79,23 @@
   )
 )
 
-(define-private (swap-stx-to-pepe (stx-amount uint))
+(define-private (swap-stx-to-token (stx-amount uint))
   (let (
       (result (try! (contract-call?
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-router
-        swap-exact-tokens-for-tokens
-        VELAR-POOL-ID
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-share-fee-to
+        'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+        swap-helper
+        'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+        'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+        u100000000
         stx-amount
-        u1
+        none
       )))
     )
-    (ok (get amt-out result))
+    (ok result)
   )
 )
 
-(define-public (arb-fak-vel-vel
+(define-public (arb-fak-vel-alex
     (token-in uint)
     (min-token-out uint))
   (begin
@@ -112,9 +109,9 @@
     ))
     (let ((sbtc-out (try! (as-contract (swap-pepe-to-sbtc token-in))))
           (stx-out (try! (as-contract (swap-sbtc-to-stx-velar sbtc-out))))
-          (token-out (try! (as-contract (swap-stx-to-pepe stx-out))))
-          (pepe-arbitrager tx-sender)
-          (burnt-pepe (if (> token-out token-in) (- token-out token-in) u0)))
+          (token-out (try! (as-contract (swap-stx-to-token stx-out))))
+          (token-arbitrager tx-sender)
+          (burnt-token (if (> token-out token-in) (- token-out token-in) u0)))
           (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
           (asserts! (> token-out token-in) ERR-NO-PROFIT)
           (try! (as-contract (contract-call? 
@@ -122,13 +119,13 @@
             transfer 
             token-in 
             CONTRACT 
-            pepe-arbitrager
+            token-arbitrager
             none
           )))
           (try! (as-contract (contract-call? 
             'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory 
             transfer 
-            burnt-pepe 
+            burnt-token 
             CONTRACT 
             SAINT
             none
@@ -136,14 +133,14 @@
           (ok {
             token-in: token-in,
             token-out: token-out,
-            burnt-pepe: burnt-pepe
+            burnt-token: burnt-token
           })
         )
       )
     )
 
 ;; REVEEEEEERSE
-(define-public (arb-vel-bit-fak
+(define-public (arb-alex-bit-fak
     (token-in uint)
     (min-token-out uint))
   (begin
@@ -155,11 +152,11 @@
       CONTRACT
       none
     ))
-    (let ((stx-out (try! (as-contract (swap-pepe-to-stx token-in))))
+    (let ((stx-out (try! (as-contract (swap-token-to-stx token-in))))
           (sbtc-out (try! (as-contract (swap-stx-to-sbtc stx-out))))
           (token-out (try! (as-contract (swap-sbtc-to-pepe sbtc-out))))
-          (pepe-arbitrager tx-sender)
-          (burnt-pepe (if (> token-out token-in) (- token-out token-in) u0)))
+          (token-arbitrager tx-sender)
+          (burnt-token (if (> token-out token-in) (- token-out token-in) u0)))
           (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
           (asserts! (> token-out token-in) ERR-NO-PROFIT)
           (try! (as-contract (contract-call? 
@@ -167,14 +164,14 @@
             transfer 
             token-in 
             CONTRACT 
-            pepe-arbitrager
+            token-arbitrager
             none
           )))
 
           (try! (as-contract (contract-call? 
             'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory 
             transfer 
-            burnt-pepe 
+            burnt-token 
             CONTRACT 
             SAINT
             none
@@ -183,28 +180,25 @@
           (ok {
             token-in: token-in,
             token-out: token-out,
-            burnt-pepe: burnt-pepe
+            burnt-token: burnt-token
           })
         )
       )
     )
 
-(define-private (swap-pepe-to-stx (token-amount uint))
+(define-private (swap-token-to-stx (token-amount uint))
   (let (
       (result (try! (contract-call?
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-router
-        swap-exact-tokens-for-tokens
-        VELAR-POOL-ID
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-share-fee-to
+        'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+        swap-helper
+        'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+        'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+        u100000000
         token-amount
-        u1
+        none
       )))
     )
-    (ok (get amt-out result))
+    (ok result)
   )
 )
 
@@ -237,7 +231,7 @@
   )
 )
 
-(define-public (arb-vel-vel-fak
+(define-public (arb-alex-vel-fak
     (token-in uint)
     (min-token-out uint))
   (begin
@@ -249,11 +243,11 @@
       CONTRACT
       none
     ))
-    (let ((stx-out (try! (as-contract (swap-pepe-to-stx token-in))))
+    (let ((stx-out (try! (as-contract (swap-token-to-stx token-in))))
           (sbtc-out (try! (as-contract (swap-stx-to-sbtc-velar stx-out))))
           (token-out (try! (as-contract (swap-sbtc-to-pepe sbtc-out))))
-          (pepe-arbitrager tx-sender)
-          (burnt-pepe (if (> token-out token-in) (- token-out token-in) u0)))
+          (token-arbitrager tx-sender)
+          (burnt-token (if (> token-out token-in) (- token-out token-in) u0)))
           (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
           (asserts! (> token-out token-in) ERR-NO-PROFIT)
           (try! (as-contract (contract-call? 
@@ -261,13 +255,13 @@
             transfer 
             token-in 
             CONTRACT 
-            pepe-arbitrager
+            token-arbitrager
             none
           )))
           (try! (as-contract (contract-call? 
             'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory 
             transfer 
-            burnt-pepe 
+            burnt-token 
             CONTRACT 
             SAINT
             none
@@ -275,7 +269,7 @@
           (ok {
             token-in: token-in,
             token-out: token-out,
-            burnt-pepe: burnt-pepe
+            burnt-token: burnt-token
           })
         )
       )
@@ -316,9 +310,9 @@
 ;; Read-only 
 (define-read-only (check-fak-bit-vel (token-in uint))
   (let (
-    (sbtc-estimate (simulate-pepe-to-sbtc token-in))
+    (sbtc-estimate (simulate-token-to-sbtc token-in))
     (stx-estimate (simulate-sbtc-to-stx sbtc-estimate))
-    (token-estimate (simulate-stx-to-pepe stx-estimate))
+    (token-estimate (simulate-stx-to-token stx-estimate))
     (profit (if (> token-estimate token-in) (- token-estimate token-in) u0))
   )
   (ok {
@@ -333,9 +327,9 @@
 
 (define-read-only (check-vel-bit-fak (token-in uint))
   (let (
-    (stx-estimate (simulate-pepe-to-stx token-in))
+    (stx-estimate (simulate-token-to-stx token-in))
     (sbtc-estimate (simulate-stx-to-sbtc stx-estimate))
-    (token-estimate (simulate-sbtc-to-pepe sbtc-estimate))
+    (token-estimate (simulate-sbtc-to-token sbtc-estimate))
     (profit (if (> token-estimate token-in) (- token-estimate token-in) u0))
   )
   (ok {
@@ -348,7 +342,7 @@
   }))
 )
 
-(define-read-only (simulate-pepe-to-sbtc (token-amount uint))
+(define-read-only (simulate-token-to-sbtc (token-amount uint))
   (get dy (unwrap-panic (contract-call? 
     'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
     quote
@@ -379,7 +373,7 @@
   )
 )
 
-(define-read-only (simulate-stx-to-pepe (stx-amount uint))
+(define-read-only (simulate-stx-to-token (stx-amount uint))
   (let ((pool (unwrap-panic (contract-call? 
           'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
           get-pool 
@@ -393,18 +387,18 @@
   amt-out)
 )
 
-(define-read-only (simulate-pepe-to-stx (token-amount uint))
-  (let ((pool (unwrap-panic (contract-call? 
-          'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
-          get-pool 
-          VELAR-POOL-ID)))
-        (r0 (get reserve0 pool))
-        (r1 (get reserve1 pool))
-        (swap-fee (get swap-fee pool))
-        (amt-in-adjusted (/ (* token-amount (get num swap-fee)) (get den swap-fee)))
-        (amt-out (/ (* r0 amt-in-adjusted) (+ r1 amt-in-adjusted)))
+(define-read-only (simulate-token-to-stx (token-amount uint))
+  (let (
+    (stx-out (unwrap-panic (contract-call?
+      'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+      get-helper
+      'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+      'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+      u100000000
+      token-amount
+    )))
   )
-  amt-out)
+  stx-out)
 )
 
 (define-read-only (simulate-stx-to-sbtc (stx-amount uint))
@@ -429,7 +423,7 @@
   )
 )
 
-(define-read-only (simulate-sbtc-to-pepe (sbtc-amount uint))
+(define-read-only (simulate-sbtc-to-token (sbtc-amount uint))
   (get dy (unwrap-panic (contract-call? 
     'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
     quote
@@ -466,9 +460,9 @@
 
 (define-read-only (check-fak-vel-vel (token-in uint))
   (let (
-    (sbtc-estimate (simulate-pepe-to-sbtc token-in))
+    (sbtc-estimate (simulate-token-to-sbtc token-in))
     (stx-estimate (simulate-sbtc-to-stx-velar sbtc-estimate))
-    (token-estimate (simulate-stx-to-pepe stx-estimate))
+    (token-estimate (simulate-stx-to-token stx-estimate))
     (profit (if (> token-estimate token-in) (- token-estimate token-in) u0))
   )
   (ok {
@@ -483,9 +477,9 @@
 
 (define-read-only (check-vel-vel-fak (token-in uint))
   (let (
-    (stx-estimate (simulate-pepe-to-stx token-in))
+    (stx-estimate (simulate-token-to-stx token-in))
     (sbtc-estimate (simulate-stx-to-sbtc-velar stx-estimate))
-    (token-estimate (simulate-sbtc-to-pepe sbtc-estimate))
+    (token-estimate (simulate-sbtc-to-token sbtc-estimate))
     (profit (if (> token-estimate token-in) (- token-estimate token-in) u0))
   )
   (ok {
