@@ -21,7 +21,7 @@
     ))
     (let ((sbtc-out (try! (as-contract (swap-token-to-sbtc token-in))))
           (stx-out (try! (as-contract (swap-sbtc-to-stx sbtc-out))))
-          (token-out (try! (as-contract (swap-stx-to-token stx-out))))
+          (token-out (try! (as-contract (swap-stx-to-token (* stx-out u100)))))
           (token-arbitrager tx-sender)
           (burnt-token (if (> token-out token-in) (- token-out token-in) u0)))
           (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
@@ -88,7 +88,7 @@
         'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
         'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
         u100000000
-        stx-amount
+        stx-amount 
         none
       )))
     )
@@ -110,7 +110,7 @@
     ))
     (let ((sbtc-out (try! (as-contract (swap-token-to-sbtc token-in))))
           (stx-out (try! (as-contract (swap-sbtc-to-stx-velar sbtc-out))))
-          (token-out (try! (as-contract (swap-stx-to-token stx-out))))
+          (token-out (try! (as-contract (swap-stx-to-token (* stx-out u100)))))
           (token-arbitrager tx-sender)
           (burnt-token (if (> token-out token-in) (- token-out token-in) u0)))
           (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
@@ -154,7 +154,7 @@
       none
     ))
     (let ((stx-out (try! (as-contract (swap-token-to-stx token-in))))
-          (sbtc-out (try! (as-contract (swap-stx-to-sbtc stx-out))))
+          (sbtc-out (try! (as-contract (swap-stx-to-sbtc (/ stx-out u100)))))
           (token-out (try! (as-contract (swap-sbtc-to-token sbtc-out))))
           (token-arbitrager tx-sender)
           (burnt-token (if (> token-out token-in) (- token-out token-in) u0)))
@@ -245,7 +245,7 @@
       none
     ))
     (let ((stx-out (try! (as-contract (swap-token-to-stx token-in))))
-          (sbtc-out (try! (as-contract (swap-stx-to-sbtc-velar stx-out))))
+          (sbtc-out (try! (as-contract (swap-stx-to-sbtc-velar (/ stx-out u100)))))
           (token-out (try! (as-contract (swap-sbtc-to-token sbtc-out))))
           (token-arbitrager tx-sender)
           (burnt-token (if (> token-out token-in) (- token-out token-in) u0)))
@@ -313,7 +313,7 @@
   (let (
     (sbtc-estimate (simulate-token-to-sbtc token-in))
     (stx-estimate (simulate-sbtc-to-stx sbtc-estimate))
-    (token-estimate (simulate-stx-to-token stx-estimate))
+    (token-estimate (simulate-stx-to-token (* stx-estimate u100)))
     (profit (if (> token-estimate token-in) (- token-estimate token-in) u0))
   )
   (ok {
@@ -328,7 +328,7 @@
 
 (define-read-only (check-alex-bit-fak (token-in uint))
   (let (
-    (stx-estimate (simulate-token-to-stx token-in))
+    (stx-estimate (/ (simulate-token-to-stx token-in) u100))
     (sbtc-estimate (simulate-stx-to-sbtc stx-estimate))
     (token-estimate (simulate-sbtc-to-token sbtc-estimate))
     (profit (if (> token-estimate token-in) (- token-estimate token-in) u0))
@@ -457,7 +457,7 @@
   (let (
     (sbtc-estimate (simulate-token-to-sbtc token-in))
     (stx-estimate (simulate-sbtc-to-stx-velar sbtc-estimate))
-    (token-estimate (simulate-stx-to-token stx-estimate))
+    (token-estimate (simulate-stx-to-token (* stx-estimate u100)))
     (profit (if (> token-estimate token-in) (- token-estimate token-in) u0))
   )
   (ok {
@@ -472,7 +472,7 @@
 
 (define-read-only (check-alex-vel-fak (token-in uint))
   (let (
-    (stx-estimate (simulate-token-to-stx token-in))
+    (stx-estimate (/ (simulate-token-to-stx token-in) u100))
     (sbtc-estimate (simulate-stx-to-sbtc-velar stx-estimate))
     (token-estimate (simulate-sbtc-to-token sbtc-estimate))
     (profit (if (> token-estimate token-in) (- token-estimate token-in) u0))

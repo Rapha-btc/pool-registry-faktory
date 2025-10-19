@@ -60,7 +60,7 @@ for (const amount of amounts) {
 }
 
 // ===== EXECUTE ACTUAL ARBITRAGE WITH PROFITABLE AMOUNT ON ALL 4 ROUTES =====
-const EXECUTION_AMOUNT = 10000000000n; // 100 B Blocks - adjust based on simulation results
+const EXECUTION_AMOUNT = 10000000000000n; // 100K B Blocks - adjust based on simulation results
 
 builder
   // ===== TEST ROUTE 1: B -> sBTC (Faktory) -> STX (Bitflow) -> B (Alex) =====
