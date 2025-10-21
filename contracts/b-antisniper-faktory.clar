@@ -6,22 +6,22 @@
 (define-constant SAINT 'SP000000000000000000002Q6VF78)
 
 (define-constant ALEX-POOL-ID u175)
+(define-constant TOTAL u100)
 
 ;; sBTC -> B token via multiple routes
-(define-public (buy-b-from-sbtc
+(define-public (buy-with-sbtc
     (sbtc-amount uint)
-    (min-b-out uint)
+    (min-token-out uint)
     (fak-ratio uint)  
-    (bit-vel-flag bool))  
+    (flag bool))  
     ;; Ratio for FAK route (0-100)
     ;; true for Bitflow, false for Velar
   (let (
-    (total-ratio u100)  ;; Total ratio (100%)
-    (fak-amount (/ (* sbtc-amount fak-ratio) total-ratio))
-    (dex-amount (- sbtc-amount fak-amount))
+    (fak-amount (/ (* sbtc-amount fak-ratio) TOTAL))
+    (alex-amount (- sbtc-amount fak-amount))
   )
     ;; Validate ratio
-    (asserts! (<= fak-ratio total-ratio) ERR-INVALID-RATIO)
+    (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)
     
     ;; Transfer sBTC from user to contract
     (try! (contract-call? 
@@ -35,124 +35,149 @@
     
     ;; Route 1: Direct sBTC->B via faktory pool
     (let (
-      (b-from-fak (if (> fak-amount u0)
+      (token-from-fak (if (> fak-amount u0)
                       (try! (as-contract (swap-sbtc-to-token fak-amount)))
                       u0))
       
       ;; Route 2: sBTC->STX->B via selected DEX
-      (stx-from-dex (if (> dex-amount u0)
-                        (if bit-vel-flag
-                            (try! (as-contract (swap-sbtc-to-stx dex-amount)))
-                            (try! (as-contract (swap-sbtc-to-stx-velar dex-amount))))
+      (stx-from-dex (if (> alex-amount u0)
+                        (if flag
+                            (try! (as-contract (swap-sbtc-to-stx alex-amount)))
+                            (try! (as-contract (swap-sbtc-to-stx-velar alex-amount))))
                         u0))
-      (b-from-dex (if (> stx-from-dex u0)
-                      (try! (as-contract (swap-stx-to-token stx-from-dex)))
+      (token-from-alex (if (> stx-from-dex u0)
+                      (try! (as-contract (swap-stx-to-token (* stx-from-dex u100))))
                       u0))
       
       ;; Total output
-      (total-b-out (+ b-from-fak b-from-dex))
+      (total-token-out (+ token-from-fak token-from-alex))
     )
       ;; Check minimum output
-      (asserts! (>= total-b-out min-b-out) ERR-SLIPPAGE)
+      (asserts! (>= total-token-out min-token-out) ERR-SLIPPAGE)
       
       ;; Transfer B tokens to user
       (try! (as-contract (contract-call? 
         'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory 
         transfer 
-        total-b-out 
+        total-token-out 
         CONTRACT 
         tx-sender
         none
       )))
-      
+      (print {
+        type: "buy",
+        sender: tx-sender,
+        token-in: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token,
+        amount-in: sbtc-amount,
+        token-out: 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory,
+        amount-out: total-token-out,
+        token-from-fak: token-from-fak,
+        token-from-dex: token-from-dex,
+        pool-contract: CONTRACT,
+        min-y-out: min-token-out })
       (ok {
         sbtc-amount: sbtc-amount,
-        b-from-fak: b-from-fak,
-        b-from-dex: b-from-dex,
-        total-b-out: total-b-out
+        token-from-fak: token-from-fak,
+        token-from-dex: token-from-dex,
+        total-token-out: total-token-out
       })
     )
   )
 )
+;; in case there is sBTC strained inside this contract
+;; or STX strained
+;; have a withdrawal func from admin
 
 ;; STX -> B token via multiple routes
-(define-public (buy-b-from-stx
+(define-public (buy-with-stx
     (stx-amount uint)
-    (min-b-out uint)
-    (vel-ratio uint)  ;; Ratio for Velar direct route (0-100)
-    (bit-vel-flag bool))  ;; true for Bitflow, false for Velar for STX->sBTC
+    (min-token-out uint)
+    (alex-ratio uint)  
+    (flag bool)) 
+    ;; Ratio for Velar direct route (0-100)
+     ;; true for Bitflow, false for Velar for STX->sBTC
   (let (
-    (total-ratio u100)  ;; Total ratio (100%)
-    (vel-amount (/ (* stx-amount vel-ratio) total-ratio))
-    (dex-amount (- stx-amount vel-amount))
+    (alex-amount (/ (* stx-amount alex-ratio) TOTAL))
+    (fak-amount (- stx-amount alex-amount))
   )
     ;; Validate ratio
-    (asserts! (<= vel-ratio total-ratio) ERR-INVALID-RATIO)
+    (asserts! (<= alex-ratio TOTAL) ERR-INVALID-RATIO)
     
     ;; Transfer STX from user to contract
     (try! (stx-transfer? stx-amount tx-sender CONTRACT))
     
     ;; Route 1: Direct STX->B via Velar
     (let (
-      (b-from-vel (if (> vel-amount u0)
-                      (try! (as-contract (swap-stx-to-token vel-amount)))
+      (token-from-alex (if (> alex-amount u0)
+                      (try! (as-contract (swap-stx-to-token (* alex-amount u100))))
                       u0))
       
       ;; Route 2: STX->sBTC->B via selected DEX
-      (sbtc-from-dex (if (> dex-amount u0)
-                         (if bit-vel-flag
-                             (try! (as-contract (swap-stx-to-sbtc dex-amount)))
-                             (try! (as-contract (swap-stx-to-sbtc-velar dex-amount))))
+      (sbtc-from-dex (if (> fak-amount u0)
+                         (if flag
+                             (try! (as-contract (swap-stx-to-sbtc fak-amount)))
+                             (try! (as-contract (swap-stx-to-sbtc-velar fak-amount))))
                          u0))
-      (b-from-dex (if (> sbtc-from-dex u0)
+      (token-from-fak (if (> sbtc-from-dex u0)
                       (try! (as-contract (swap-sbtc-to-token sbtc-from-dex)))
                       u0))
       
       ;; Total output
-      (total-b-out (+ b-from-vel b-from-dex))
+      (total-token-out (+ token-from-alex token-from-fak))
     )
       ;; Check minimum output
-      (asserts! (>= total-b-out min-b-out) ERR-SLIPPAGE)
+      (asserts! (>= total-token-out min-token-out) ERR-SLIPPAGE)
       
       ;; Transfer B tokens to user
       (try! (as-contract (contract-call? 
         'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory 
         transfer 
-        total-b-out 
+        total-token-out 
         CONTRACT 
         tx-sender
         none
       )))
-      
+        (print {
+        type: "buy",
+        sender: tx-sender,
+        token-in: 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx,
+        amount-in: stx-amount,
+        token-out: 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory,
+        amount-out: total-token-out,
+        token-from-fak: token-from-fak,
+        token-from-dex: token-from-dex,
+        pool-contract: CONTRACT,
+        min-y-out: min-token-out
+        })
       (ok {
         stx-amount: stx-amount,
-        b-from-vel: b-from-vel,
-        b-from-dex: b-from-dex,
-        total-b-out: total-b-out
+        token-from-alex: token-from-alex,
+        token-from-fak: token-from-fak,
+        total-token-out: total-token-out
       })
     )
   )
 )
 
 ;; B token -> sBTC via multiple routes
-(define-public (sell-b-for-sbtc
-    (b-amount uint)
+(define-public (sell-for-sbtc
+    (token-amount uint)
     (min-sbtc-out uint)
-    (fak-ratio uint)  ;; Ratio for FAK route (0-100)
-    (bit-vel-flag bool))  ;; true for Bitflow, false for Velar
+    (fak-ratio uint)  
+    (flag bool))  
+    ;; Ratio for FAK route (0-100) ;; true for Bitflow, false for Velar
   (let (
-    (total-ratio u100)  ;; Total ratio (100%)
-    (fak-amount (/ (* b-amount fak-ratio) total-ratio))
-    (dex-amount (- b-amount fak-amount))
+    (fak-amount (/ (* token-amount fak-ratio) TOTAL))
+    (alex-amount (- token-amount fak-amount))
   )
     ;; Validate ratio
-    (asserts! (<= fak-ratio total-ratio) ERR-INVALID-RATIO)
+    (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)
     
     ;; Transfer B tokens from user to contract
     (try! (contract-call? 
       'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory 
       transfer 
-      b-amount 
+      token-amount 
       tx-sender 
       CONTRACT
       none
@@ -165,13 +190,13 @@
                          u0))
       
       ;; Route 2: B->STX->sBTC via selected DEX
-      (stx-from-vel (if (> dex-amount u0)
-                        (try! (as-contract (swap-token-to-stx dex-amount)))
+      (stx-from-alex (if (> alex-amount u0)
+                        (try! (as-contract (swap-token-to-stx alex-amount)))
                         u0))
-      (sbtc-from-dex (if (> stx-from-vel u0)
-                         (if bit-vel-flag
-                             (try! (as-contract (swap-stx-to-sbtc stx-from-vel)))
-                             (try! (as-contract (swap-stx-to-sbtc-velar stx-from-vel))))
+      (sbtc-from-dex (if (> stx-from-alex u0)
+                         (if flag
+                             (try! (as-contract (swap-stx-to-sbtc (/ stx-from-alex u100))))
+                             (try! (as-contract (swap-stx-to-sbtc-velar (/ stx-from-alex u100)))))
                          u0))
       
       ;; Total output
@@ -189,9 +214,20 @@
         tx-sender
         none
       )))
-      
+      (print {
+        type: "sell",
+        sender: tx-sender,
+        token-in: 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory,
+        amount-in: token-amount, 
+        token-out: 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token,
+        amount-out: total-sbtc-out,
+        sbtc-from-fak: sbtc-from-fak,
+        sbtc-from-dex: sbtc-from-dex,
+        pool-contract: CONTRACT,
+        min-y-out: min-sbtc-out
+      })
       (ok {
-        b-amount: b-amount,
+        token-amount: token-amount,
         sbtc-from-fak: sbtc-from-fak,
         sbtc-from-dex: sbtc-from-dex,
         total-sbtc-out: total-sbtc-out
@@ -201,24 +237,23 @@
 )
 
 ;; B token -> STX via multiple routes
-(define-public (sell-b-for-stx
-    (b-amount uint)
+(define-public (sell-for-stx
+    (token-amount uint)
     (min-stx-out uint)
-    (vel-ratio uint)  ;; Ratio for Velar direct route (0-100)
-    (bit-vel-flag bool))  ;; true for Bitflow, false for Velar for sBTC->STX
+    (alex-ratio uint)  
+    (flag bool))  ;; true for Bitflow, false for Velar for sBTC->STX ;; Ratio for Velar direct route (0-100)
   (let (
-    (total-ratio u100)  ;; Total ratio (100%)
-    (vel-amount (/ (* b-amount vel-ratio) total-ratio))
-    (dex-amount (- b-amount vel-amount))
+    (alex-amount (/ (* token-amount alex-ratio) TOTAL))
+    (fak-amount (- token-amount alex-amount))
   )
     ;; Validate ratio
-    (asserts! (<= vel-ratio total-ratio) ERR-INVALID-RATIO)
+    (asserts! (<= alex-ratio TOTAL) ERR-INVALID-RATIO)
     
     ;; Transfer B tokens from user to contract
     (try! (contract-call? 
       'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory 
       transfer 
-      b-amount 
+      token-amount 
       tx-sender 
       CONTRACT
       none
@@ -226,32 +261,43 @@
     
     ;; Route 1: Direct B->STX via Velar
     (let (
-      (stx-from-vel (if (> vel-amount u0)
-                        (try! (as-contract (swap-token-to-stx vel-amount)))
+      (stx-from-alex (if (> alex-amount u0)
+                        (try! (/ (as-contract (swap-token-to-stx alex-amount)) u100))
                         u0))
       
       ;; Route 2: B->sBTC->STX via selected DEX
-      (sbtc-from-fak (if (> dex-amount u0)
-                         (try! (as-contract (swap-token-to-sbtc dex-amount)))
+      (sbtc-from-fak (if (> fak-amount u0)
+                         (try! (as-contract (swap-token-to-sbtc fak-amount)))
                          u0))
       (stx-from-dex (if (> sbtc-from-fak u0)
-                        (if bit-vel-flag
+                        (if flag
                             (try! (as-contract (swap-sbtc-to-stx sbtc-from-fak)))
                             (try! (as-contract (swap-sbtc-to-stx-velar sbtc-from-fak))))
                         u0))
       
       ;; Total output
-      (total-stx-out (+ stx-from-vel stx-from-dex))
+      (total-stx-out (+ stx-from-alex stx-from-dex))
     )
       ;; Check minimum output
       (asserts! (>= total-stx-out min-stx-out) ERR-SLIPPAGE)
       
       ;; Transfer STX to user
       (try! (as-contract (stx-transfer? total-stx-out CONTRACT tx-sender)))
-      
+      (print {
+        type: "sell",
+        sender: tx-sender,
+        token-in: 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory,
+        amount-in: token-amount, 
+        token-out: 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx,
+        amount-out: total-stx-out,
+        stx-from-alex: stx-from-alex,
+        stx-from-dex: stx-from-dex,
+        pool-contract: CONTRACT,
+        min-y-out: min-stx-out
+      })
       (ok {
-        b-amount: b-amount,
-        stx-from-vel: stx-from-vel,
+        token-amount: token-amount,
+        stx-from-alex: stx-from-alex,
         stx-from-dex: stx-from-dex,
         total-stx-out: total-stx-out
       })
@@ -260,12 +306,12 @@
 )
 
 ;; Helper to calculate optimal ratio between routes based on liquidity
-(define-read-only (calculate-optimal-ratio-sbtc-to-b (bit-vel-flag bool))
+(define-read-only (calculate-optimal-ratio-sbtc-to-b (flag bool))
   (let (
     ;; Get liquidity stats for the routes
     (fak-sbtc-b-liquidity (get-fak-sbtc-b-liquidity))
-    (stx-b-liquidity (get-velar-stx-b-liquidity))
-    (sbtc-stx-liquidity (if bit-vel-flag
+    (stx-b-liquidity (get-alex-stx-token-liquidity))
+    (sbtc-stx-liquidity (if flag
                           (get-bit-sbtc-stx-liquidity)
                           (get-velar-sbtc-stx-liquidity)))
     
@@ -288,12 +334,12 @@
 )
 
 ;; Helper to calculate optimal ratio for STX to B routes
-(define-read-only (calculate-optimal-ratio-stx-to-b (bit-vel-flag bool))
+(define-read-only (calculate-optimal-ratio-stx-to-b (flag bool))
   (let (
     ;; Get liquidity stats for the routes
-    (velar-stx-b-liquidity (get-velar-stx-b-liquidity))
+    (velar-stx-b-liquidity (get-alex-stx-token-liquidity))
     (fak-sbtc-b-liquidity (get-fak-sbtc-b-liquidity))
-    (sbtc-stx-liquidity (if bit-vel-flag
+    (sbtc-stx-liquidity (if flag
                           (get-bit-sbtc-stx-liquidity)
                           (get-velar-sbtc-stx-liquidity)))
     
@@ -326,14 +372,18 @@
   )
 )
 
-(define-read-only (get-velar-stx-b-liquidity)
-  (let ((pool (contract-call? 
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
-        get-pool 
-        VELAR-POOL-ID)))
-    (get reserve0 pool)  ;; Return STX liquidity
-  )
-)
+(define-read-only (get-alex-stx-token-liquidity)
+     (let (
+       (pool-data (unwrap-panic (contract-call?
+         'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+         get-pool-details
+         'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+         'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+         u100000000)))
+     )
+     (get balance-x pool-data)  ;; Return STX liquidity
+     )
+   )
 
 (define-read-only (get-bit-sbtc-stx-liquidity)
   (let (
@@ -361,10 +411,10 @@
 )
 
 ;; Read-only function to estimate optimal output for sBTC to B swap
-(define-read-only (estimate-sbtc-to-b (sbtc-amount uint) (bit-vel-flag bool))
+(define-read-only (estimate-sbtc-to-b (sbtc-amount uint) (flag bool))
   (let (
     ;; Get optimal ratio
-    (ratio-data (calculate-optimal-ratio-sbtc-to-b bit-vel-flag))
+    (ratio-data (calculate-optimal-ratio-sbtc-to-b flag))
     (fak-ratio (get fak-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
@@ -374,7 +424,7 @@
     
     ;; Estimate outputs
     (b-from-fak (simulate-sbtc-to-token fak-amount))
-    (stx-from-dex (if bit-vel-flag
+    (stx-from-dex (if flag
                      (simulate-sbtc-to-stx dex-amount)
                      (simulate-sbtc-to-stx-velar dex-amount)))
     (b-from-dex (simulate-stx-to-token stx-from-dex))
@@ -395,10 +445,10 @@
 )
 
 ;; Read-only function to estimate optimal output for STX to B swap
-(define-read-only (estimate-stx-to-b (stx-amount uint) (bit-vel-flag bool))
+(define-read-only (estimate-stx-to-b (stx-amount uint) (flag bool))
   (let (
     ;; Get optimal ratio
-    (ratio-data (calculate-optimal-ratio-stx-to-b bit-vel-flag))
+    (ratio-data (calculate-optimal-ratio-stx-to-b flag))
     (velar-ratio (get velar-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
@@ -408,7 +458,7 @@
     
     ;; Estimate outputs
     (b-from-vel (simulate-stx-to-token velar-amount))
-    (sbtc-from-dex (if bit-vel-flag
+    (sbtc-from-dex (if flag
                       (simulate-stx-to-sbtc dex-amount)
                       (simulate-stx-to-sbtc-velar dex-amount)))
     (b-from-dex (simulate-sbtc-to-token sbtc-from-dex))
@@ -504,23 +554,20 @@
 )
 
 (define-private (swap-token-to-stx (token-amount uint))
-  (let (
-      (result (try! (contract-call?
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-router
-        swap-exact-tokens-for-tokens
-        VELAR-POOL-ID
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-share-fee-to
-        token-amount
-        u1
-      )))
-    )
-    (ok (get amt-out result))
-  )
-)
+     (let (
+       (result (try! (contract-call?
+         'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+         swap-y-for-x
+         'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+         'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+         u100000000
+         token-amount
+         none
+       )))
+     )
+     (ok (get dx result))
+     )
+   )
 
 (define-private (swap-sbtc-to-stx-velar (sbtc-amount uint))
   (let (
@@ -618,32 +665,36 @@
 )
 
 (define-read-only (simulate-stx-to-token (stx-amount uint))
-  (let ((pool (unwrap-panic (contract-call? 
-          'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
-          get-pool 
-          VELAR-POOL-ID)))
-        (r0 (get reserve0 pool))
-        (r1 (get reserve1 pool))
-        (swap-fee (get swap-fee pool))
-        (amt-in-adjusted (/ (* stx-amount (get num swap-fee)) (get den swap-fee)))
-        (amt-out (/ (* r1 amt-in-adjusted) (+ r0 amt-in-adjusted)))
-  )
-  amt-out)
-)
+     (let (
+       (fee (/ (+ (* stx-amount u500000) u99999999) u100000000))
+       (stx-net (if (<= stx-amount fee) u0 (- stx-amount fee)))
+     )
+     (unwrap-panic (contract-call?
+       'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+       get-y-given-x
+       'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+       'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+       u100000000
+       stx-net
+     ))
+     )
+   )
 
 (define-read-only (simulate-token-to-stx (token-amount uint))
-  (let ((pool (unwrap-panic (contract-call? 
-          'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core 
-          get-pool 
-          VELAR-POOL-ID)))
-        (r0 (get reserve0 pool))
-        (r1 (get reserve1 pool))
-        (swap-fee (get swap-fee pool))
-        (amt-in-adjusted (/ (* token-amount (get num swap-fee)) (get den swap-fee)))
-        (amt-out (/ (* r0 amt-in-adjusted) (+ r1 amt-in-adjusted)))
-  )
-  amt-out)
-)
+     (let (
+       (fee (/ (+ (* token-amount u500000) u99999999) u100000000))
+       (token-net (if (<= token-amount fee) u0 (- token-amount fee)))
+     )
+     (unwrap-panic (contract-call?
+       'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+       get-x-given-y
+       'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
+       'SP1KK89R86W73SJE6RQNQPRDM471008S9JY4FQA62.token-wbfaktory
+       u100000000
+       token-net
+     ))
+     )
+   )
 
 (define-read-only (simulate-sbtc-to-stx-velar (sbtc-amount uint))
   (let ((pool (unwrap-panic (contract-call? 
@@ -770,23 +821,23 @@
 )
 
 ;; Similar read-only functions for selling B tokens
-(define-read-only (estimate-b-to-sbtc (b-amount uint) (bit-vel-flag bool))
+(define-read-only (estimate-b-to-sbtc (token-amount uint) (flag bool))
   (let (
     ;; For sell routes, we need to invert the ratios from the buy routes
     ;; This is because the optimal buy ratio might not be the optimal sell ratio
     ;; due to differences in pool reserves and pricing
-    (ratio-data (calculate-optimal-ratio-sbtc-to-b bit-vel-flag))
+    (ratio-data (calculate-optimal-ratio-sbtc-to-b flag))
     (fak-ratio (get fak-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
     ;; Calculate amounts for each route
-    (fak-amount (/ (* b-amount fak-ratio) u100))
-    (dex-amount (/ (* b-amount dex-ratio) u100))
+    (fak-amount (/ (* token-amount fak-ratio) u100))
+    (dex-amount (/ (* token-amount dex-ratio) u100))
     
     ;; Estimate outputs
     (sbtc-from-fak (simulate-token-to-sbtc fak-amount))
     (stx-from-dex (simulate-token-to-stx dex-amount))
-    (sbtc-from-stx (if bit-vel-flag
+    (sbtc-from-stx (if flag
                      (simulate-stx-to-sbtc stx-from-dex)
                      (simulate-stx-to-sbtc-velar stx-from-dex)))
     
@@ -794,7 +845,7 @@
     (total-sbtc-out (+ sbtc-from-fak sbtc-from-stx))
   )
     (ok {
-      b-amount: b-amount,
+      token-amount: token-amount,
       optimal-fak-ratio: fak-ratio,
       fak-amount: fak-amount,
       dex-amount: dex-amount,
@@ -805,21 +856,21 @@
   )
 )
 
-(define-read-only (estimate-b-to-stx (b-amount uint) (bit-vel-flag bool))
+(define-read-only (estimate-b-to-stx (token-amount uint) (flag bool))
   (let (
     ;; For sell routes, we need to invert the ratios from the buy routes
-    (ratio-data (calculate-optimal-ratio-stx-to-b bit-vel-flag))
+    (ratio-data (calculate-optimal-ratio-stx-to-b flag))
     (velar-ratio (get velar-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
     ;; Calculate amounts for each route
-    (velar-amount (/ (* b-amount velar-ratio) u100))
-    (dex-amount (/ (* b-amount dex-ratio) u100))
+    (velar-amount (/ (* token-amount velar-ratio) u100))
+    (dex-amount (/ (* token-amount dex-ratio) u100))
     
     ;; Estimate outputs
     (stx-from-velar (simulate-token-to-stx velar-amount))
     (sbtc-from-dex (simulate-token-to-sbtc dex-amount))
-    (stx-from-sbtc (if bit-vel-flag
+    (stx-from-sbtc (if flag
                       (simulate-sbtc-to-stx sbtc-from-dex)
                       (simulate-sbtc-to-stx-velar sbtc-from-dex)))
     
@@ -827,7 +878,7 @@
     (total-stx-out (+ stx-from-velar stx-from-sbtc))
   )
     (ok {
-      b-amount: b-amount,
+      token-amount: token-amount,
       optimal-velar-ratio: velar-ratio,
       velar-amount: velar-amount,
       dex-amount: dex-amount,
@@ -838,11 +889,11 @@
   )
 )
 
-(define-read-only (compare-b-to-sbtc-routes (b-amount uint))
+(define-read-only (compare-b-to-sbtc-routes (token-amount uint))
   (let (
     ;; Get estimates for different route combinations
-    (route-bit (unwrap-panic (estimate-b-to-sbtc b-amount true)))
-    (route-vel (unwrap-panic (estimate-b-to-sbtc b-amount false)))
+    (route-bit (unwrap-panic (estimate-b-to-sbtc token-amount true)))
+    (route-vel (unwrap-panic (estimate-b-to-sbtc token-amount false)))
     
     ;; Compare outputs
     (best-route (if (> (get total-sbtc-out route-bit) (get total-sbtc-out route-vel)) 
@@ -856,7 +907,7 @@
                        (get optimal-fak-ratio route-vel)))
   )
     {
-      b-amount: b-amount,
+      token-amount: token-amount,
       best-route: best-route,
       best-output: best-output,
       best-fak-ratio: best-fak-ratio,
@@ -868,11 +919,11 @@
   )
 )
 
-(define-read-only (compare-b-to-stx-routes (b-amount uint))
+(define-read-only (compare-b-to-stx-routes (token-amount uint))
   (let (
     ;; Get estimates for different route combinations
-    (route-bit (unwrap-panic (estimate-b-to-stx b-amount true)))
-    (route-vel (unwrap-panic (estimate-b-to-stx b-amount false)))
+    (route-bit (unwrap-panic (estimate-b-to-stx token-amount true)))
+    (route-vel (unwrap-panic (estimate-b-to-stx token-amount false)))
     
     ;; Compare outputs
     (best-route (if (> (get total-stx-out route-bit) (get total-stx-out route-vel)) 
@@ -886,7 +937,7 @@
                          (get optimal-velar-ratio route-vel)))
   )
     {
-      b-amount: b-amount,
+      token-amount: token-amount,
       best-route: best-route,
       best-output: best-output,
       best-velar-ratio: best-velar-ratio,
@@ -900,16 +951,16 @@
 
 ;; Convenience functions for selling B with the best route and ratio
 (define-public (smart-sell-b-for-sbtc
-    (b-amount uint)
+    (token-amount uint)
     (min-sbtc-out uint))
   (let (
-    (best-route (compare-b-to-sbtc-routes b-amount))
+    (best-route (compare-b-to-sbtc-routes token-amount))
     (use-bit (is-eq (get best-route best-route) "BitFlow"))
     (fak-ratio (get best-fak-ratio best-route))
   )
-    (try! (sell-b-for-sbtc b-amount min-sbtc-out fak-ratio use-bit))
+    (try! (sell-b-for-sbtc token-amount min-sbtc-out fak-ratio use-bit))
     (ok {
-      b-amount: b-amount,
+      token-amount: token-amount,
       sbtc-out: (get best-output best-route),
       route-used: (get best-route best-route),
       fak-ratio-used: fak-ratio
@@ -918,16 +969,16 @@
 )
 
 (define-public (smart-sell-b-for-stx
-    (b-amount uint)
+    (token-amount uint)
     (min-stx-out uint))
   (let (
-    (best-route (compare-b-to-stx-routes b-amount))
+    (best-route (compare-b-to-stx-routes token-amount))
     (use-bit (is-eq (get best-route best-route) "BitFlow"))
     (velar-ratio (get best-velar-ratio best-route))
   )
-    (try! (sell-b-for-stx b-amount min-stx-out velar-ratio use-bit))
+    (try! (sell-b-for-stx token-amount min-stx-out velar-ratio use-bit))
     (ok {
-      b-amount: b-amount,
+      token-amount: token-amount,
       stx-out: (get best-output best-route),
       route-used: (get best-route best-route),
       velar-ratio-used: velar-ratio
