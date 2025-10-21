@@ -306,10 +306,10 @@
 )
 
 ;; Helper to calculate optimal ratio between routes based on liquidity
-(define-read-only (calculate-optimal-ratio-sbtc-to-b (flag bool))
+(define-read-only (calculate-optimal-ratio-sbtc-to-token (flag bool))
   (let (
     ;; Get liquidity stats for the routes
-    (fak-sbtc-b-liquidity (get-fak-sbtc-b-liquidity))
+    (fak-sbtc-b-liquidity (get-fak-sbtc-token-liquidity))
     (stx-b-liquidity (get-alex-stx-token-liquidity))
     (sbtc-stx-liquidity (if flag
                           (get-bit-sbtc-stx-liquidity)
@@ -334,11 +334,11 @@
 )
 
 ;; Helper to calculate optimal ratio for STX to B routes
-(define-read-only (calculate-optimal-ratio-stx-to-b (flag bool))
+(define-read-only (calculate-optimal-ratio-stx-to-token (flag bool))
   (let (
     ;; Get liquidity stats for the routes
     (velar-stx-b-liquidity (get-alex-stx-token-liquidity))
-    (fak-sbtc-b-liquidity (get-fak-sbtc-b-liquidity))
+    (fak-sbtc-b-liquidity (get-fak-sbtc-token-liquidity))
     (sbtc-stx-liquidity (if flag
                           (get-bit-sbtc-stx-liquidity)
                           (get-velar-sbtc-stx-liquidity)))
@@ -362,13 +362,13 @@
 )
 
 ;; Helper functions to get liquidity data from various pools
-(define-read-only (get-fak-sbtc-b-liquidity)
+(define-read-only (get-fak-sbtc-token-liquidity)
   (let (
     (pool-data (contract-call? 
-      'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool-v2
-      get-reserves))
+      'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
+      get-reserves-quote))
   )
-    (get sbtc pool-data)  ;; Return sBTC liquidity
+    (get dx pool-data)  ;; Return sBTC liquidity (dx)
   )
 )
 
@@ -411,10 +411,10 @@
 )
 
 ;; Read-only function to estimate optimal output for sBTC to B swap
-(define-read-only (estimate-sbtc-to-b (sbtc-amount uint) (flag bool))
+(define-read-only (estimate-sbtc-to-token (sbtc-amount uint) (flag bool))
   (let (
     ;; Get optimal ratio
-    (ratio-data (calculate-optimal-ratio-sbtc-to-b flag))
+    (ratio-data (calculate-optimal-ratio-sbtc-to-token flag))
     (fak-ratio (get fak-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
@@ -423,32 +423,32 @@
     (dex-amount (/ (* sbtc-amount dex-ratio) u100))
     
     ;; Estimate outputs
-    (b-from-fak (simulate-sbtc-to-token fak-amount))
+    (token-from-fak (simulate-sbtc-to-token fak-amount))
     (stx-from-dex (if flag
                      (simulate-sbtc-to-stx dex-amount)
                      (simulate-sbtc-to-stx-velar dex-amount)))
-    (b-from-dex (simulate-stx-to-token stx-from-dex))
+    (token-from-dex (simulate-stx-to-token stx-from-dex))
     
     ;; Total output
-    (total-b-out (+ b-from-fak b-from-dex))
+    (total-token-out (+ token-from-fak token-from-dex))
   )
     (ok {
       sbtc-amount: sbtc-amount,
       optimal-fak-ratio: fak-ratio,
       fak-amount: fak-amount,
       dex-amount: dex-amount,
-      b-from-fak: b-from-fak,
-      b-from-dex: b-from-dex,
-      total-b-out: total-b-out
+      token-from-fak: token-from-fak,
+      token-from-dex: token-from-dex,
+      total-token-out: total-token-out
     })
   )
 )
 
 ;; Read-only function to estimate optimal output for STX to B swap
-(define-read-only (estimate-stx-to-b (stx-amount uint) (flag bool))
+(define-read-only (estimate-stx-to-token (stx-amount uint) (flag bool))
   (let (
     ;; Get optimal ratio
-    (ratio-data (calculate-optimal-ratio-stx-to-b flag))
+    (ratio-data (calculate-optimal-ratio-stx-to-token flag))
     (velar-ratio (get velar-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
@@ -457,23 +457,23 @@
     (dex-amount (/ (* stx-amount dex-ratio) u100))
     
     ;; Estimate outputs
-    (b-from-vel (simulate-stx-to-token velar-amount))
+    (token-from-alex (simulate-stx-to-token velar-amount))
     (sbtc-from-dex (if flag
                       (simulate-stx-to-sbtc dex-amount)
                       (simulate-stx-to-sbtc-velar dex-amount)))
-    (b-from-dex (simulate-sbtc-to-token sbtc-from-dex))
+    (token-from-dex (simulate-sbtc-to-token sbtc-from-dex))
     
     ;; Total output
-    (total-b-out (+ b-from-vel b-from-dex))
+    (total-token-out (+ token-from-alex token-from-dex))
   )
     (ok {
       stx-amount: stx-amount,
       optimal-velar-ratio: velar-ratio,
       velar-amount: velar-amount,
       dex-amount: dex-amount,
-      b-from-vel: b-from-vel,
-      b-from-dex: b-from-dex,
-      total-b-out: total-b-out
+      token-from-alex: token-from-alex,
+      token-from-dex: token-from-dex,
+      total-token-out: total-token-out
     })
   )
 )
@@ -482,7 +482,7 @@
 (define-private (swap-token-to-sbtc (token-amount uint))
   (let (
       (result (try! (contract-call? 
-        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool-v2
+        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
         execute
         token-amount
         (some 0x01) 
@@ -495,7 +495,7 @@
 (define-private (swap-sbtc-to-token (sbtc-amount uint))
   (let (
       (result (try! (contract-call? 
-        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool-v2
+        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
         execute
         sbtc-amount
         (some 0x00) 
@@ -604,7 +604,7 @@
 ;; Simulation functions
 (define-read-only (simulate-token-to-sbtc (token-amount uint))
   (get dy (unwrap-panic (contract-call? 
-    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool-v2
+    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
     quote
     token-amount
     (some 0x01) 
@@ -613,7 +613,7 @@
 
 (define-read-only (simulate-sbtc-to-token (sbtc-amount uint))
   (get dy (unwrap-panic (contract-call? 
-    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool-v2
+    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
     quote
     sbtc-amount
     (some 0x00) 
@@ -723,20 +723,20 @@
 )
 
 ;; Helper read-only functions to compare different routes
-(define-read-only (compare-sbtc-to-b-routes (sbtc-amount uint))
+(define-read-only (compare-sbtc-to-token-routes (sbtc-amount uint))
   (let (
     ;; Get estimates for different route combinations
-    (route-bit (unwrap-panic (estimate-sbtc-to-b sbtc-amount true)))
-    (route-vel (unwrap-panic (estimate-sbtc-to-b sbtc-amount false)))
+    (route-bit (unwrap-panic (estimate-sbtc-to-token sbtc-amount true)))
+    (route-vel (unwrap-panic (estimate-sbtc-to-token sbtc-amount false)))
     
     ;; Compare outputs
-    (best-route (if (> (get total-b-out route-bit) (get total-b-out route-vel)) 
+    (best-route (if (> (get total-token-out route-bit) (get total-token-out route-vel)) 
                    "BitFlow" 
                    "Velar"))
-    (best-output (if (> (get total-b-out route-bit) (get total-b-out route-vel))
-                    (get total-b-out route-bit)
-                    (get total-b-out route-vel)))
-    (best-fak-ratio (if (> (get total-b-out route-bit) (get total-b-out route-vel))
+    (best-output (if (> (get total-token-out route-bit) (get total-token-out route-vel))
+                    (get total-token-out route-bit)
+                    (get total-token-out route-vel)))
+    (best-fak-ratio (if (> (get total-token-out route-bit) (get total-token-out route-vel))
                        (get optimal-fak-ratio route-bit)
                        (get optimal-fak-ratio route-vel)))
   )
@@ -745,28 +745,28 @@
       best-route: best-route,
       best-output: best-output,
       best-fak-ratio: best-fak-ratio,
-      bit-output: (get total-b-out route-bit),
-      vel-output: (get total-b-out route-vel),
+      bit-output: (get total-token-out route-bit),
+      vel-output: (get total-token-out route-vel),
       bit-fak-ratio: (get optimal-fak-ratio route-bit),
       vel-fak-ratio: (get optimal-fak-ratio route-vel)
     }
   )
 )
 
-(define-read-only (compare-stx-to-b-routes (stx-amount uint))
+(define-read-only (compare-stx-to-token-routes (stx-amount uint))
   (let (
     ;; Get estimates for different route combinations
-    (route-bit (unwrap-panic (estimate-stx-to-b stx-amount true)))
-    (route-vel (unwrap-panic (estimate-stx-to-b stx-amount false)))
+    (route-bit (unwrap-panic (estimate-stx-to-token stx-amount true)))
+    (route-vel (unwrap-panic (estimate-stx-to-token stx-amount false)))
     
     ;; Compare outputs
-    (best-route (if (> (get total-b-out route-bit) (get total-b-out route-vel)) 
+    (best-route (if (> (get total-token-out route-bit) (get total-token-out route-vel)) 
                    "BitFlow" 
                    "Velar"))
-    (best-output (if (> (get total-b-out route-bit) (get total-b-out route-vel))
-                    (get total-b-out route-bit)
-                    (get total-b-out route-vel)))
-    (best-velar-ratio (if (> (get total-b-out route-bit) (get total-b-out route-vel))
+    (best-output (if (> (get total-token-out route-bit) (get total-token-out route-vel))
+                    (get total-token-out route-bit)
+                    (get total-token-out route-vel)))
+    (best-alex-ratio (if (> (get total-token-out route-bit) (get total-token-out route-vel))
                          (get optimal-velar-ratio route-bit)
                          (get optimal-velar-ratio route-vel)))
   )
@@ -774,59 +774,61 @@
       stx-amount: stx-amount,
       best-route: best-route,
       best-output: best-output,
-      best-velar-ratio: best-velar-ratio,
-      bit-output: (get total-b-out route-bit),
-      vel-output: (get total-b-out route-vel),
-      bit-velar-ratio: (get optimal-velar-ratio route-bit),
-      vel-velar-ratio: (get optimal-velar-ratio route-vel)
+      best-alex-ratio: best-alex-ratio,
+      bit-output: (get total-token-out route-bit),
+      vel-output: (get total-token-out route-vel),
+      bit-alex-ratio: (get optimal-velar-ratio route-bit),
+      vel-alex-ratio: (get optimal-velar-ratio route-vel)
     }
   )
 )
 
 ;; Convenience functions that automatically use the best route and ratio
-(define-public (smart-buy-b-from-sbtc
+(define-public (smart-buy-with-sbtc
     (sbtc-amount uint)
-    (min-b-out uint))
+    (min-token-out uint))
   (let (
-    (best-route (compare-sbtc-to-b-routes sbtc-amount))
-    (use-bit (is-eq (get best-route best-route) "BitFlow"))
+    (best-route (compare-sbtc-to-token-routes sbtc-amount))
+    (use-flag (is-eq (get best-route best-route) "BitFlow"))
     (fak-ratio (get best-fak-ratio best-route))
   )
-    (try! (buy-b-from-sbtc sbtc-amount min-b-out fak-ratio use-bit))
+    (try! (buy-with-sbtc sbtc-amount min-token-out fak-ratio use-flag))
     (ok {
       sbtc-amount: sbtc-amount,
-      b-out: (get best-output best-route),
+      token-out: (get best-output best-route),
       route-used: (get best-route best-route),
       fak-ratio-used: fak-ratio
     })
   )
 )
 
-(define-public (smart-buy-b-from-stx
+(define-public (smart-buy-with-stx
     (stx-amount uint)
-    (min-b-out uint))
+    (min-token-out uint))
   (let (
-    (best-route (compare-stx-to-b-routes stx-amount))
-    (use-bit (is-eq (get best-route best-route) "BitFlow"))
-    (velar-ratio (get best-velar-ratio best-route))
+    (best-route (compare-stx-to-token-routes stx-amount))
+    (use-flag (is-eq (get best-route best-route) "BitFlow"))
+    (alex-ratio (get best-velar-ratio best-route))
   )
-    (try! (buy-b-from-stx stx-amount min-b-out velar-ratio use-bit))
+    (try! (buy-with-stx stx-amount min-token-out alex-ratio use-flag))
     (ok {
       stx-amount: stx-amount,
-      b-out: (get best-output best-route),
+      token-out: (get best-output best-route),
       route-used: (get best-route best-route),
-      velar-ratio-used: velar-ratio
+      alex-ratio-used: alex-ratio
     })
   )
 )
 
+
 ;; Similar read-only functions for selling B tokens
-(define-read-only (estimate-b-to-sbtc (token-amount uint) (flag bool))
+;; Similar read-only functions for selling B tokens
+(define-read-only (estimate-token-to-sbtc (token-amount uint) (flag bool))
   (let (
     ;; For sell routes, we need to invert the ratios from the buy routes
     ;; This is because the optimal buy ratio might not be the optimal sell ratio
     ;; due to differences in pool reserves and pricing
-    (ratio-data (calculate-optimal-ratio-sbtc-to-b flag))
+    (ratio-data (calculate-optimal-ratio-sbtc-to-token flag))
     (fak-ratio (get fak-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
@@ -856,44 +858,44 @@
   )
 )
 
-(define-read-only (estimate-b-to-stx (token-amount uint) (flag bool))
+(define-read-only (estimate-token-to-stx (token-amount uint) (flag bool))
   (let (
     ;; For sell routes, we need to invert the ratios from the buy routes
-    (ratio-data (calculate-optimal-ratio-stx-to-b flag))
-    (velar-ratio (get velar-ratio ratio-data))
+    (ratio-data (calculate-optimal-ratio-stx-to-token flag))
+    (alex-ratio (get velar-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
     ;; Calculate amounts for each route
-    (velar-amount (/ (* token-amount velar-ratio) u100))
+    (alex-amount (/ (* token-amount alex-ratio) u100))
     (dex-amount (/ (* token-amount dex-ratio) u100))
     
     ;; Estimate outputs
-    (stx-from-velar (simulate-token-to-stx velar-amount))
+    (stx-from-alex (simulate-token-to-stx alex-amount))
     (sbtc-from-dex (simulate-token-to-sbtc dex-amount))
     (stx-from-sbtc (if flag
                       (simulate-sbtc-to-stx sbtc-from-dex)
                       (simulate-sbtc-to-stx-velar sbtc-from-dex)))
     
     ;; Total output
-    (total-stx-out (+ stx-from-velar stx-from-sbtc))
+    (total-stx-out (+ stx-from-alex stx-from-sbtc))
   )
     (ok {
       token-amount: token-amount,
-      optimal-velar-ratio: velar-ratio,
-      velar-amount: velar-amount,
+      optimal-alex-ratio: alex-ratio,
+      alex-amount: alex-amount,
       dex-amount: dex-amount,
-      stx-from-velar: stx-from-velar,
+      stx-from-alex: stx-from-alex,
       stx-from-sbtc: stx-from-sbtc,
       total-stx-out: total-stx-out
     })
   )
 )
 
-(define-read-only (compare-b-to-sbtc-routes (token-amount uint))
+(define-read-only (compare-token-to-sbtc-routes (token-amount uint))
   (let (
     ;; Get estimates for different route combinations
-    (route-bit (unwrap-panic (estimate-b-to-sbtc token-amount true)))
-    (route-vel (unwrap-panic (estimate-b-to-sbtc token-amount false)))
+    (route-bit (unwrap-panic (estimate-token-to-sbtc token-amount true)))
+    (route-vel (unwrap-panic (estimate-token-to-sbtc token-amount false)))
     
     ;; Compare outputs
     (best-route (if (> (get total-sbtc-out route-bit) (get total-sbtc-out route-vel)) 
@@ -919,11 +921,11 @@
   )
 )
 
-(define-read-only (compare-b-to-stx-routes (token-amount uint))
+(define-read-only (compare-token-to-stx-routes (token-amount uint))
   (let (
     ;; Get estimates for different route combinations
-    (route-bit (unwrap-panic (estimate-b-to-stx token-amount true)))
-    (route-vel (unwrap-panic (estimate-b-to-stx token-amount false)))
+    (route-bit (unwrap-panic (estimate-token-to-stx token-amount true)))
+    (route-vel (unwrap-panic (estimate-token-to-stx token-amount false)))
     
     ;; Compare outputs
     (best-route (if (> (get total-stx-out route-bit) (get total-stx-out route-vel)) 
@@ -932,33 +934,35 @@
     (best-output (if (> (get total-stx-out route-bit) (get total-stx-out route-vel))
                     (get total-stx-out route-bit)
                     (get total-stx-out route-vel)))
-    (best-velar-ratio (if (> (get total-stx-out route-bit) (get total-stx-out route-vel))
-                         (get optimal-velar-ratio route-bit)
-                         (get optimal-velar-ratio route-vel)))
+    (best-alex-ratio (if (> (get total-stx-out route-bit) (get total-stx-out route-vel))
+                         (get optimal-alex-ratio route-bit)
+                         (get optimal-alex-ratio route-vel)))
   )
     {
       token-amount: token-amount,
       best-route: best-route,
       best-output: best-output,
-      best-velar-ratio: best-velar-ratio,
+      best-alex-ratio: best-alex-ratio,
       bit-output: (get total-stx-out route-bit),
       vel-output: (get total-stx-out route-vel),
-      bit-velar-ratio: (get optimal-velar-ratio route-bit),
-      vel-velar-ratio: (get optimal-velar-ratio route-vel)
+      bit-alex-ratio: (get optimal-alex-ratio route-bit),
+      vel-alex-ratio: (get optimal-alex-ratio route-vel)
     }
   )
 )
 
+
 ;; Convenience functions for selling B with the best route and ratio
-(define-public (smart-sell-b-for-sbtc
+;; Convenience functions for selling B with the best route and ratio
+(define-public (smart-sell-for-sbtc
     (token-amount uint)
     (min-sbtc-out uint))
   (let (
-    (best-route (compare-b-to-sbtc-routes token-amount))
-    (use-bit (is-eq (get best-route best-route) "BitFlow"))
+    (best-route (compare-token-to-sbtc-routes token-amount))
+    (use-flag (is-eq (get best-route best-route) "BitFlow"))
     (fak-ratio (get best-fak-ratio best-route))
   )
-    (try! (sell-b-for-sbtc token-amount min-sbtc-out fak-ratio use-bit))
+    (try! (sell-for-sbtc token-amount min-sbtc-out fak-ratio use-flag))
     (ok {
       token-amount: token-amount,
       sbtc-out: (get best-output best-route),
@@ -968,20 +972,20 @@
   )
 )
 
-(define-public (smart-sell-b-for-stx
+(define-public (smart-sell-for-stx
     (token-amount uint)
     (min-stx-out uint))
   (let (
-    (best-route (compare-b-to-stx-routes token-amount))
-    (use-bit (is-eq (get best-route best-route) "BitFlow"))
-    (velar-ratio (get best-velar-ratio best-route))
+    (best-route (compare-token-to-stx-routes token-amount))
+    (use-flag (is-eq (get best-route best-route) "BitFlow"))
+    (alex-ratio (get best-alex-ratio best-route))
   )
-    (try! (sell-b-for-stx token-amount min-stx-out velar-ratio use-bit))
+    (try! (sell-for-stx token-amount min-stx-out alex-ratio use-flag))
     (ok {
       token-amount: token-amount,
       stx-out: (get best-output best-route),
       route-used: (get best-route best-route),
-      velar-ratio-used: velar-ratio
+      alex-ratio-used: alex-ratio
     })
   )
 )
