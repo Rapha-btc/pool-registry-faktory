@@ -9,7 +9,7 @@ const B_HOLDER = "SPWK34YZPVW724K9C8NRZA6VT4YDA2PB5SSD1VYF"; // User with B Bloc
 // Test different amounts to find profitable size
 const amounts = [
   //  B Block (8 decimals)
-  5000000000000n, // 100k B Blocks
+  5000000000000n, // 50k B Blocks
   10000000000000n, // 100k B Blocks
   50000000000000n, // 500k B Blocks
   100000000000000n, // 1M B Blocks

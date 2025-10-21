@@ -376,8 +376,7 @@
 
 (define-read-only (simulate-stx-to-token (stx-amount uint))
   (let (
-      ;; Alex charges 0.5% fee = 500000 (in 8 decimals)
-      (fee (/ (+ (* stx-amount u500000) u99999999) u100000000)) ;; mul-up
+      (fee (/ (+ (* stx-amount u500000) u99999999) u100000000)) 
       (stx-net (if (<= stx-amount fee) u0 (- stx-amount fee)))
     )
     (unwrap-panic (contract-call?
@@ -393,8 +392,7 @@
 
 (define-read-only (simulate-token-to-stx (token-amount uint))
   (let (
-      ;; Alex charges 0.5% fee = 500000 (in 8 decimals)
-      (fee (/ (+ (* token-amount u500000) u99999999) u100000000)) ;; mul-up
+      (fee (/ (+ (* token-amount u500000) u99999999) u100000000)) 
       (token-net (if (<= token-amount fee) u0 (- token-amount fee)))
     )
     (unwrap-panic (contract-call?
@@ -443,9 +441,8 @@
   (let ((pool (unwrap-panic (contract-call? 
           'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-pool-v1_0_0-0070
           get-pool)))
-        (r0 (get reserve0 pool)) ;; STX
-        (r1 (get reserve1 pool)) ;; sBTC
-        ;; Velar fee: 0.3% = 997/1000 of input remains after fee
+        (r0 (get reserve0 pool)) 
+        (r1 (get reserve1 pool)) 
         (amt-in-adjusted (/ (* sbtc-amount u997) u1000))
         (amt-out (/ (* r0 amt-in-adjusted) (+ r1 amt-in-adjusted)))
   )
@@ -456,9 +453,8 @@
   (let ((pool (unwrap-panic (contract-call? 
           'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-pool-v1_0_0-0070
           get-pool)))
-        (r0 (get reserve0 pool)) ;; STX
-        (r1 (get reserve1 pool)) ;; sBTC
-        ;; Velar fee: 0.3% = 997/1000 of input remains after fee
+        (r0 (get reserve0 pool)) 
+        (r1 (get reserve1 pool)) 
         (amt-in-adjusted (/ (* stx-amount u997) u1000))
         (amt-out (/ (* r1 amt-in-adjusted) (+ r0 amt-in-adjusted)))
   )
