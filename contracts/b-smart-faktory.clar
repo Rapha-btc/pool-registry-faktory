@@ -309,7 +309,7 @@
 (define-read-only (calculate-optimal-ratio-sbtc-to-token (flag bool))
   (let (
     ;; Get liquidity stats for the routes
-    (fak-sbtc-b-liquidity (get-fak-sbtc-token-liquidity))
+    (fak-sbtc-token-liquidity (get-fak-sbtc-token-liquidity))
     (stx-b-liquidity (get-alex-stx-token-liquidity))
     (sbtc-stx-liquidity (if flag
                           (get-bit-sbtc-stx-liquidity)
@@ -320,13 +320,13 @@
     (stx-b-in-sbtc (/ stx-b-liquidity stx-in-sbtc-ratio))
     
     ;; Calculate ratio
-    (total-liquidity (+ fak-sbtc-b-liquidity stx-b-in-sbtc))
-    (fak-percentage (/ (* fak-sbtc-b-liquidity u100) total-liquidity))
+    (total-liquidity (+ fak-sbtc-token-liquidity stx-b-in-sbtc))
+    (fak-percentage (/ (* fak-sbtc-token-liquidity u100) total-liquidity))
   )
     {
       fak-ratio: fak-percentage,
       dex-ratio: (- u100 fak-percentage),
-      fak-liquidity: fak-sbtc-b-liquidity,
+      fak-liquidity: fak-sbtc-token-liquidity,
       dex-liquidity-sbtc-equiv: stx-b-in-sbtc,
       total-liquidity-sbtc-equiv: total-liquidity
     }
@@ -338,14 +338,14 @@
   (let (
     ;; Get liquidity stats for the routes
     (velar-stx-b-liquidity (get-alex-stx-token-liquidity))
-    (fak-sbtc-b-liquidity (get-fak-sbtc-token-liquidity))
+    (fak-sbtc-token-liquidity (get-fak-sbtc-token-liquidity))
     (sbtc-stx-liquidity (if flag
                           (get-bit-sbtc-stx-liquidity)
                           (get-velar-sbtc-stx-liquidity)))
     
     ;; Convert sBTC liquidity to STX equivalent using the sBTC/STX rate
     (sbtc-in-stx-ratio (/ sbtc-stx-liquidity.y-balance sbtc-stx-liquidity.x-balance))
-    (fak-sbtc-b-in-stx (/ fak-sbtc-b-liquidity sbtc-in-stx-ratio))
+    (fak-sbtc-b-in-stx (/ fak-sbtc-token-liquidity sbtc-in-stx-ratio))
     
     ;; Calculate ratio
     (total-liquidity (+ velar-stx-b-liquidity fak-sbtc-b-in-stx))
@@ -365,7 +365,7 @@
 (define-read-only (get-fak-sbtc-token-liquidity)
   (let (
     (pool-data (contract-call? 
-      'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
+      'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
       get-reserves-quote))
   )
     (get dx pool-data)  ;; Return sBTC liquidity (dx)
@@ -482,7 +482,7 @@
 (define-private (swap-token-to-sbtc (token-amount uint))
   (let (
       (result (try! (contract-call? 
-        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
+        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
         execute
         token-amount
         (some 0x01) 
@@ -495,7 +495,7 @@
 (define-private (swap-sbtc-to-token (sbtc-amount uint))
   (let (
       (result (try! (contract-call? 
-        'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
+        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
         execute
         sbtc-amount
         (some 0x00) 
@@ -604,7 +604,7 @@
 ;; Simulation functions
 (define-read-only (simulate-token-to-sbtc (token-amount uint))
   (get dy (unwrap-panic (contract-call? 
-    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
+    'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
     quote
     token-amount
     (some 0x01) 
@@ -613,7 +613,7 @@
 
 (define-read-only (simulate-sbtc-to-token (sbtc-amount uint))
   (get dy (unwrap-panic (contract-call? 
-    'SP6SA6BTPNN5WDAWQ7GWJF1T5E2KWY01K9SZDBJQ.b-faktory-pool
+    'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
     quote
     sbtc-amount
     (some 0x00) 
