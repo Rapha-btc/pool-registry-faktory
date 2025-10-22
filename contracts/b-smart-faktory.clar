@@ -72,13 +72,13 @@
         token-out: 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory,
         amount-out: total-token-out,
         token-from-fak: token-from-fak,
-        token-from-dex: token-from-dex,
+        token-from-dex: token-from-alex,
         pool-contract: CONTRACT,
         min-y-out: min-token-out })
       (ok {
         sbtc-amount: sbtc-amount,
         token-from-fak: token-from-fak,
-        token-from-dex: token-from-dex,
+        token-from-dex: token-from-alex,
         total-token-out: total-token-out
       })
     )
@@ -144,8 +144,8 @@
         amount-in: stx-amount,
         token-out: 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory,
         amount-out: total-token-out,
-        token-from-fak: token-from-fak,
-        token-from-dex: token-from-dex,
+        token-from-alex: token-from-alex,
+        token-from-dex: token-from-fak,
         pool-contract: CONTRACT,
         min-y-out: min-token-out
         })
