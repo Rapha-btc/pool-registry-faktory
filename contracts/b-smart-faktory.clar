@@ -35,6 +35,7 @@
     
     ;; Route 1: Direct sBTC->B via faktory pool
     (let (
+      (sender tx-sender)
       (token-from-fak (if (> fak-amount u0)
                       (try! (as-contract (swap-sbtc-to-token fak-amount)))
                       u0))
@@ -45,13 +46,13 @@
                             (try! (as-contract (swap-sbtc-to-stx alex-amount)))
                             (try! (as-contract (swap-sbtc-to-stx-velar alex-amount))))
                         u0))
+   
       (token-from-alex (if (> stx-from-dex u0)
                       (try! (as-contract (swap-stx-to-token (* stx-from-dex u100))))
                       u0))
-      
-      ;; Total output
-      (total-token-out (+ token-from-fak token-from-alex))
-    )
+    ;; Total output
+      (total-token-out (+ token-from-fak token-from-alex)))
+    
       ;; Check minimum output
       (asserts! (>= total-token-out min-token-out) ERR-SLIPPAGE)
       
@@ -61,9 +62,10 @@
         transfer 
         total-token-out 
         CONTRACT 
-        tx-sender
+        sender
         none
       )))
+  
       (print {
         type: "buy",
         sender: tx-sender,
@@ -84,9 +86,6 @@
     )
   )
 )
-;; in case there is sBTC strained inside this contract
-;; or STX strained
-;; have a withdrawal func from admin
 
 ;; STX -> B token via multiple routes
 (define-public (buy-with-stx
@@ -108,6 +107,7 @@
     
     ;; Route 1: Direct STX->B via Velar
     (let (
+      (sender tx-sender)
       (token-from-alex (if (> alex-amount u0)
                       (try! (as-contract (swap-stx-to-token (* alex-amount u100))))
                       u0))
@@ -134,7 +134,7 @@
         transfer 
         total-token-out 
         CONTRACT 
-        tx-sender
+        sender
         none
       )))
         (print {
@@ -185,6 +185,7 @@
     
     ;; Route 1: Direct B->sBTC via faktory pool
     (let (
+      (sender tx-sender)
       (sbtc-from-fak (if (> fak-amount u0)
                          (try! (as-contract (swap-token-to-sbtc fak-amount)))
                          u0))
@@ -211,7 +212,7 @@
         transfer 
         total-sbtc-out 
         CONTRACT 
-        tx-sender
+        sender
         none
       )))
       (print {
@@ -261,6 +262,7 @@
     
     ;; Route 1: Direct B->STX via Velar
     (let (
+      (sender tx-sender)
       (stx-from-alex (if (> alex-amount u0)
                         (try! (as-contract (swap-token-to-stx alex-amount)))
                         u0))
@@ -282,7 +284,7 @@
       (asserts! (>= total-stx-out min-stx-out) ERR-SLIPPAGE)
       
       ;; Transfer STX to user
-      (try! (as-contract (stx-transfer? total-stx-out CONTRACT tx-sender)))
+      (try! (as-contract (stx-transfer? total-stx-out CONTRACT sender)))
       (print {
         type: "sell",
         sender: tx-sender,
@@ -354,7 +356,7 @@
     {
       alex-ratio: alex-percentage,
       dex-ratio: (- u100 alex-percentage),
-      alex-liquidity: alex-stx-token-liquidity,
+      alex-liquidity: (/ alex-stx-token-liquidity u100),
       dex-liquidity-stx-equiv: fak-sbtc-token-in-stx,
       total-liquidity-stx-equiv: total-liquidity
     }

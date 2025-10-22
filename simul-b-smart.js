@@ -4,13 +4,13 @@ import { SimulationBuilder } from "stxer";
 
 // Define addresses
 const DEPLOYER = "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM";
-const SBTC_HOLDER = "SP1DZARHA1GVEWVCDF1J9N044A69Q6VT7KMDPQ5N9";
+const SBTC_HOLDER = "SP24MM95FEZJY3XWSBGZ5CT8DV04J6NVM5QA4WDXZ";
 const STX_HOLDER = "SP2KZ24AM4X9HGTG8314MS4VSY1CVAFH0G1KBZZ1D";
 const B_HOLDER = "SPWK34YZPVW724K9C8NRZA6VT4YDA2PB5SSD1VYF";
 
 // Test amounts
 const SBTC_AMOUNT = 100000n; // 100k sats of sBTC (8 decimals)
-const STX_AMOUNT = 5000000000n; // 50 STX (6 decimals)
+const STX_AMOUNT = 100000000n; // 100 STX (6 decimals)
 const B_AMOUNT = 50000000000000n; // 500,000 B tokens (8 decimals)
 
 // Test ratios
@@ -273,3 +273,5 @@ Key Insights to Look For:
 4. Are the optimal ratios close to the liquidity proportions?
 5. Do smart routing functions correctly identify the best route?
 */
+
+// all green https://stxer.xyz/simulations/mainnet/7c0ade34aeb4c1f89b056cf312bf05dc
