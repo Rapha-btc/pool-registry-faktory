@@ -262,7 +262,7 @@
     ;; Route 1: Direct B->STX via Velar
     (let (
       (stx-from-alex (if (> alex-amount u0)
-                        (try! (/ (as-contract (swap-token-to-stx alex-amount)) u100))
+                        (try! (as-contract (swap-token-to-stx alex-amount)))
                         u0))
       
       ;; Route 2: B->sBTC->STX via selected DEX
@@ -420,7 +420,7 @@
     (dex-ratio (get dex-ratio ratio-data))
     
     ;; Calculate amounts for each route
-    (fak-amount (/ (* sbtc-amount fak-ratio) u100))
+    (fak-amount (/ (* sbtc-amount fak-ratio) TOTAL))
     (dex-amount (- sbtc-amount fak-amount))
     
     ;; Estimate outputs
@@ -829,7 +829,7 @@
     (dex-ratio (get dex-ratio ratio-data))
     
     ;; Calculate amounts for each route
-    (fak-amount (/ (* token-amount fak-ratio) u100))
+    (fak-amount (/ (* token-amount fak-ratio) TOTAL))
     (dex-amount (- token-amount fak-amount))
     
     ;; Estimate outputs
