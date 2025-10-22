@@ -276,7 +276,7 @@
                         u0))
       
       ;; Total output
-      (total-stx-out (+ stx-from-alex stx-from-dex))
+      (total-stx-out (+ (/ stx-from-alex u100) stx-from-dex))
     )
       ;; Check minimum output
       (asserts! (>= total-stx-out min-stx-out) ERR-SLIPPAGE)
@@ -310,24 +310,24 @@
   (let (
     ;; Get liquidity stats for the routes
     (fak-sbtc-token-liquidity (get-fak-sbtc-token-liquidity))
-    (stx-b-liquidity (get-alex-stx-token-liquidity))
+    (alex-stx-token-liquidity (get-alex-stx-token-liquidity))
     (sbtc-stx-liquidity (if flag
                           (get-bit-sbtc-stx-liquidity)
                           (get-velar-sbtc-stx-liquidity)))
     
     ;; Convert STX liquidity to sBTC equivalent using the sBTC/STX rate
-    (stx-in-sbtc-ratio (/ sbtc-stx-liquidity.x-balance sbtc-stx-liquidity.y-balance)) 
-    (stx-b-in-sbtc (/ stx-b-liquidity stx-in-sbtc-ratio))
+    (stx-in-sbtc-ratio (/ (get x-balance sbtc-stx-liquidity) (get y-balance sbtc-stx-liquidity))) 
+    (alex-stx-token-in-sbtc (/ alex-stx-token-liquidity stx-in-sbtc-ratio))
     
     ;; Calculate ratio
-    (total-liquidity (+ fak-sbtc-token-liquidity stx-b-in-sbtc))
+    (total-liquidity (+ fak-sbtc-token-liquidity alex-stx-token-in-sbtc))
     (fak-percentage (/ (* fak-sbtc-token-liquidity u100) total-liquidity))
   )
     {
       fak-ratio: fak-percentage,
       dex-ratio: (- u100 fak-percentage),
       fak-liquidity: fak-sbtc-token-liquidity,
-      dex-liquidity-sbtc-equiv: stx-b-in-sbtc,
+      dex-liquidity-sbtc-equiv: alex-stx-token-in-sbtc,
       total-liquidity-sbtc-equiv: total-liquidity
     }
   )
@@ -337,25 +337,25 @@
 (define-read-only (calculate-optimal-ratio-stx-to-token (flag bool))
   (let (
     ;; Get liquidity stats for the routes
-    (velar-stx-b-liquidity (get-alex-stx-token-liquidity))
+    (alex-stx-token-liquidity (get-alex-stx-token-liquidity))
     (fak-sbtc-token-liquidity (get-fak-sbtc-token-liquidity))
     (sbtc-stx-liquidity (if flag
                           (get-bit-sbtc-stx-liquidity)
                           (get-velar-sbtc-stx-liquidity)))
     
     ;; Convert sBTC liquidity to STX equivalent using the sBTC/STX rate
-    (sbtc-in-stx-ratio (/ sbtc-stx-liquidity.y-balance sbtc-stx-liquidity.x-balance))
-    (fak-sbtc-b-in-stx (/ fak-sbtc-token-liquidity sbtc-in-stx-ratio))
+    (sbtc-in-stx-ratio (/ (get y-balance sbtc-stx-liquidity) (get x-balance sbtc-stx-liquidity)))
+    (fak-sbtc-token-in-stx (/ fak-sbtc-token-liquidity sbtc-in-stx-ratio))
     
     ;; Calculate ratio
-    (total-liquidity (+ velar-stx-b-liquidity fak-sbtc-b-in-stx))
-    (velar-percentage (/ (* velar-stx-b-liquidity u100) total-liquidity))
+    (total-liquidity (+ alex-stx-token-liquidity fak-sbtc-token-in-stx))
+    (alex-percentage (/ (* alex-stx-token-liquidity u100) total-liquidity))
   )
     {
-      velar-ratio: velar-percentage,
-      dex-ratio: (- u100 velar-percentage),
-      velar-liquidity: velar-stx-b-liquidity,
-      dex-liquidity-stx-equiv: fak-sbtc-b-in-stx,
+      alex-ratio: alex-percentage,
+      dex-ratio: (- u100 alex-percentage),
+      alex-liquidity: alex-stx-token-liquidity,
+      dex-liquidity-stx-equiv: fak-sbtc-token-in-stx,
       total-liquidity-stx-equiv: total-liquidity
     }
   )
@@ -387,25 +387,26 @@
 
 (define-read-only (get-bit-sbtc-stx-liquidity)
   (let (
-    (pool (contract-call?
+    (pool (unwrap-panic (contract-call?
       'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1
       get-pool
-    ))
+    )))
   )
     {
-      x-balance: (get x-balance pool),  ;; sBTC liquidity
-      y-balance: (get y-balance pool)   ;; STX liquidity
+      x-balance: (get x-balance pool),  ;; sBTC liquidity = 10.65064974 sBTC
+      y-balance: (get y-balance pool)   ;; STX liquidity = 26,582.28348505 STX
     }
   )
 )
 
 (define-read-only (get-velar-sbtc-stx-liquidity)
-  (let ((pool (contract-call? 
+  (let ((pool (unwrap-panic (contract-call? 
         'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-pool-v1_0_0-0070
         get-pool)))
+    )
     {
-      x-balance: (get reserve1 pool),  ;; sBTC liquidity 
-      y-balance: (get reserve0 pool)   ;; STX liquidity
+      x-balance: (get reserve1 pool),  ;; sBTC liquidity = 1.58944993 sBTC
+      y-balance: (get reserve0 pool)   ;; STX liquidity = 3,986.13620056 STX
     }
   )
 )
@@ -420,14 +421,14 @@
     
     ;; Calculate amounts for each route
     (fak-amount (/ (* sbtc-amount fak-ratio) u100))
-    (dex-amount (/ (* sbtc-amount dex-ratio) u100))
+    (dex-amount (- sbtc-amount fak-amount))
     
     ;; Estimate outputs
     (token-from-fak (simulate-sbtc-to-token fak-amount))
     (stx-from-dex (if flag
                      (simulate-sbtc-to-stx dex-amount)
                      (simulate-sbtc-to-stx-velar dex-amount)))
-    (token-from-dex (simulate-stx-to-token stx-from-dex))
+    (token-from-dex (simulate-stx-to-token (* stx-from-dex u100)))
     
     ;; Total output
     (total-token-out (+ token-from-fak token-from-dex))
@@ -449,15 +450,15 @@
   (let (
     ;; Get optimal ratio
     (ratio-data (calculate-optimal-ratio-stx-to-token flag))
-    (velar-ratio (get velar-ratio ratio-data))
+    (alex-ratio (get alex-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
     ;; Calculate amounts for each route
-    (velar-amount (/ (* stx-amount velar-ratio) u100))
-    (dex-amount (/ (* stx-amount dex-ratio) u100))
+    (alex-amount (/ (* stx-amount alex-ratio) u100))
+    (dex-amount (- stx-amount alex-amount))
     
     ;; Estimate outputs
-    (token-from-alex (simulate-stx-to-token velar-amount))
+    (token-from-alex (simulate-stx-to-token (* alex-amount u100)))
     (sbtc-from-dex (if flag
                       (simulate-stx-to-sbtc dex-amount)
                       (simulate-stx-to-sbtc-velar dex-amount)))
@@ -468,8 +469,8 @@
   )
     (ok {
       stx-amount: stx-amount,
-      optimal-velar-ratio: velar-ratio,
-      velar-amount: velar-amount,
+      optimal-alex-ratio: alex-ratio,
+      alex-amount: alex-amount,
       dex-amount: dex-amount,
       token-from-alex: token-from-alex,
       token-from-dex: token-from-dex,
@@ -767,8 +768,8 @@
                     (get total-token-out route-bit)
                     (get total-token-out route-vel)))
     (best-alex-ratio (if (> (get total-token-out route-bit) (get total-token-out route-vel))
-                         (get optimal-velar-ratio route-bit)
-                         (get optimal-velar-ratio route-vel)))
+                         (get optimal-alex-ratio route-bit)
+                         (get optimal-alex-ratio route-vel)))
   )
     {
       stx-amount: stx-amount,
@@ -777,8 +778,8 @@
       best-alex-ratio: best-alex-ratio,
       bit-output: (get total-token-out route-bit),
       vel-output: (get total-token-out route-vel),
-      bit-alex-ratio: (get optimal-velar-ratio route-bit),
-      vel-alex-ratio: (get optimal-velar-ratio route-vel)
+      bit-alex-ratio: (get optimal-alex-ratio route-bit),
+      vel-alex-ratio: (get optimal-alex-ratio route-vel)
     }
   )
 )
@@ -808,7 +809,7 @@
   (let (
     (best-route (compare-stx-to-token-routes stx-amount))
     (use-flag (is-eq (get best-route best-route) "BitFlow"))
-    (alex-ratio (get best-velar-ratio best-route))
+    (alex-ratio (get best-alex-ratio best-route))
   )
     (try! (buy-with-stx stx-amount min-token-out alex-ratio use-flag))
     (ok {
@@ -820,31 +821,26 @@
   )
 )
 
-
-;; Similar read-only functions for selling B tokens
 ;; Similar read-only functions for selling B tokens
 (define-read-only (estimate-token-to-sbtc (token-amount uint) (flag bool))
   (let (
-    ;; For sell routes, we need to invert the ratios from the buy routes
-    ;; This is because the optimal buy ratio might not be the optimal sell ratio
-    ;; due to differences in pool reserves and pricing
     (ratio-data (calculate-optimal-ratio-sbtc-to-token flag))
     (fak-ratio (get fak-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
     ;; Calculate amounts for each route
     (fak-amount (/ (* token-amount fak-ratio) u100))
-    (dex-amount (/ (* token-amount dex-ratio) u100))
+    (dex-amount (- token-amount fak-amount))
     
     ;; Estimate outputs
     (sbtc-from-fak (simulate-token-to-sbtc fak-amount))
     (stx-from-dex (simulate-token-to-stx dex-amount))
-    (sbtc-from-stx (if flag
-                     (simulate-stx-to-sbtc stx-from-dex)
-                     (simulate-stx-to-sbtc-velar stx-from-dex)))
+    (sbtc-from-dex (if flag
+                     (simulate-stx-to-sbtc (/ stx-from-dex u100))
+                     (simulate-stx-to-sbtc-velar (/ stx-from-dex u100))))
     
     ;; Total output
-    (total-sbtc-out (+ sbtc-from-fak sbtc-from-stx))
+    (total-sbtc-out (+ sbtc-from-fak sbtc-from-dex))
   )
     (ok {
       token-amount: token-amount,
@@ -852,7 +848,7 @@
       fak-amount: fak-amount,
       dex-amount: dex-amount,
       sbtc-from-fak: sbtc-from-fak,
-      sbtc-from-stx: sbtc-from-stx,
+      sbtc-from-dex: sbtc-from-dex,
       total-sbtc-out: total-sbtc-out
     })
   )
@@ -862,22 +858,22 @@
   (let (
     ;; For sell routes, we need to invert the ratios from the buy routes
     (ratio-data (calculate-optimal-ratio-stx-to-token flag))
-    (alex-ratio (get velar-ratio ratio-data))
+    (alex-ratio (get alex-ratio ratio-data))
     (dex-ratio (get dex-ratio ratio-data))
     
     ;; Calculate amounts for each route
     (alex-amount (/ (* token-amount alex-ratio) u100))
-    (dex-amount (/ (* token-amount dex-ratio) u100))
+    (dex-amount (- token-amount alex-amount))
     
     ;; Estimate outputs
-    (stx-from-alex (simulate-token-to-stx alex-amount))
+    (stx-from-alex (/ (simulate-token-to-stx alex-amount) u100))
     (sbtc-from-dex (simulate-token-to-sbtc dex-amount))
-    (stx-from-sbtc (if flag
+    (stx-from-dex (if flag
                       (simulate-sbtc-to-stx sbtc-from-dex)
                       (simulate-sbtc-to-stx-velar sbtc-from-dex)))
     
     ;; Total output
-    (total-stx-out (+ stx-from-alex stx-from-sbtc))
+    (total-stx-out (+ stx-from-alex stx-from-dex))
   )
     (ok {
       token-amount: token-amount,
@@ -885,7 +881,7 @@
       alex-amount: alex-amount,
       dex-amount: dex-amount,
       stx-from-alex: stx-from-alex,
-      stx-from-sbtc: stx-from-sbtc,
+      stx-from-dex: stx-from-dex,
       total-stx-out: total-stx-out
     })
   )
@@ -951,8 +947,6 @@
   )
 )
 
-
-;; Convenience functions for selling B with the best route and ratio
 ;; Convenience functions for selling B with the best route and ratio
 (define-public (smart-sell-for-sbtc
     (token-amount uint)
