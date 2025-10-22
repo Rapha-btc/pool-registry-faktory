@@ -316,12 +316,13 @@
                           (get-velar-sbtc-stx-liquidity)))
     
     ;; Convert STX liquidity to sBTC equivalent using the sBTC/STX rate
-    (stx-in-sbtc-ratio (/ (get x-balance sbtc-stx-liquidity) (get y-balance sbtc-stx-liquidity))) 
+    (y-balance (get y-balance sbtc-stx-liquidity))
+    (stx-in-sbtc-ratio (if (> y-balance u0) (/ (get x-balance sbtc-stx-liquidity) y-balance) u0)) 
     (alex-stx-token-in-sbtc (/ alex-stx-token-liquidity stx-in-sbtc-ratio))
     
     ;; Calculate ratio
     (total-liquidity (+ fak-sbtc-token-liquidity alex-stx-token-in-sbtc))
-    (fak-percentage (/ (* fak-sbtc-token-liquidity u100) total-liquidity))
+    (fak-percentage (if (> total-liquidity u0) (/ (* fak-sbtc-token-liquidity u100) total-liquidity) u0))
   )
     {
       fak-ratio: fak-percentage,
@@ -344,7 +345,8 @@
                           (get-velar-sbtc-stx-liquidity)))
     
     ;; Convert sBTC liquidity to STX equivalent using the sBTC/STX rate
-    (sbtc-in-stx-ratio (/ (get y-balance sbtc-stx-liquidity) (get x-balance sbtc-stx-liquidity)))
+    (x-balance (get x-balance sbtc-stx-liquidity))
+    (sbtc-in-stx-ratio (if (> x-balance u0) (/ (get y-balance sbtc-stx-liquidity) x-balance) u0))
     (fak-sbtc-token-in-stx (/ fak-sbtc-token-liquidity sbtc-in-stx-ratio))
     
     ;; Calculate ratio
