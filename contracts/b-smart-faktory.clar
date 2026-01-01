@@ -485,8 +485,9 @@
 (define-private (swap-token-to-sbtc (token-amount uint))
   (let (
       (result (try! (contract-call? 
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
+        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.faktory-core-v2
         execute
+        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
         token-amount
         (some 0x01) 
       )))
@@ -498,8 +499,9 @@
 (define-private (swap-sbtc-to-token (sbtc-amount uint))
   (let (
       (result (try! (contract-call? 
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
+        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.faktory-core-v2
         execute
+        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.b-faktory-pool
         sbtc-amount
         (some 0x00) 
       )))
