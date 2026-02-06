@@ -558,6 +558,7 @@
                         (print {
                             type: "buy-seats",
                             sender: tx-owner,
+                            seats: actual-seats,
                             token-in: (get x-token info),
                             amount-in: (* actual-seats (unwrap! (get price-per-seat info) ERR-PRICE-PER-SEAT)),
                             token-out: (get y-token info),
@@ -584,6 +585,7 @@
                             (print {
                                 type: "refund-seats",
                                 sender: tx-owner,
+                                seats-refunded: user-seats,
                                 token-in: (get y-token info),
                                 amount-in: (* user-seats (unwrap! (get tokens-per-seat info) ERR-TOKENS-PER-SEAT)),
                                 token-out: (get x-token info),
