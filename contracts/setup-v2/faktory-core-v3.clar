@@ -64,7 +64,7 @@
 )
     (let (
         (new-pool-id (+ (var-get last-pool-id) u1))
-        (uri (default-to u"https://faktory.fun/" pool-uri))
+        (uri (default-to u"https://fak.fun/" pool-uri))
         (caller tx-sender)
         (reserves-data (unwrap! (contract-call? pool-contract quote u0 (some OP_LOOKUP_RESERVES)) ERROR_RESERVES))
     )
@@ -118,7 +118,7 @@
 ) 
     (let (
         (new-pool-id (+ (var-get last-pool-id) u1))
-        (uri (default-to u"https://faktory.fun/" pool-uri))
+        (uri (default-to u"https://fak.fun/" pool-uri))
         (caller tx-sender)
     )
         (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
@@ -170,7 +170,7 @@
     (let (
         (caller tx-sender)
         (existing-pool (unwrap! (map-get? pools pool-id) ERR_POOL_NOT_FOUND))
-        (uri (default-to u"https://faktory.fun/" pool-uri))
+        (uri (default-to u"https://fak.fun/" pool-uri))
     )
         (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
         (asserts! (> (len name) u0) ERR_INVALID_POOL_DATA)
