@@ -331,6 +331,7 @@
 (define-map dexes uint {
     dex-contract: principal,
     pre-contract: principal,
+    bonus-contract: (optional principal),
     x-token: principal,
     y-token: principal,
     x-target: uint,
@@ -343,6 +344,7 @@
 
 (define-map dex-contracts principal uint)
 (define-map pre-contracts principal uint)
+(define-map bonus-contracts principal uint)
 
 (define-read-only (get-last-dex-id)
    (var-get last-dex-id)
@@ -366,9 +368,17 @@
     )
 )
 
+(define-read-only (get-dex-by-bonus (bonus-contract principal))
+    (match (map-get? bonus-contracts bonus-contract)
+        dex-id (map-get? dexes dex-id)
+        none
+    )
+)
+
 (define-public (register-dex
     (dex-contract principal)
     (pre-contract principal)
+    (bonus-contract (optional principal))
     (x-token principal)
     (y-token principal)
     (x-target uint)
@@ -388,6 +398,7 @@
         (map-set dexes new-dex-id {
             dex-contract: dex-contract,
             pre-contract: pre-contract,
+            bonus-contract: bonus-contract,
             x-token: x-token,
             y-token: y-token,
             x-target: x-target,
@@ -396,17 +407,23 @@
             tokens-per-seat: tokens-per-seat,
             creation-height: creation-height
         })
-        
+
         (map-set dex-contracts dex-contract new-dex-id)
         (map-set pre-contracts pre-contract new-dex-id)
+        ;; Register bonus contract if provided
+        (match bonus-contract
+            bonus-principal (map-set bonus-contracts bonus-principal new-dex-id)
+            true
+        )
         (var-set last-dex-id new-dex-id)
-        
+
         (print {
             action: "register-dex",
             caller: caller,
             dex-id: new-dex-id,
             dex-contract: dex-contract,
             pre-contract: pre-contract,
+            bonus-contract: bonus-contract,
             x-token: x-token,
             y-token: y-token,
             x-target: x-target,
@@ -423,6 +440,7 @@
     (dex-id uint)
     (dex-contract principal)
     (pre-contract principal)
+    (bonus-contract (optional principal))
     (x-token principal)
     (y-token principal)
     (x-target uint)
@@ -436,10 +454,11 @@
         (existing-dex (unwrap! (map-get? dexes dex-id) ERR_POOL_NOT_FOUND))
     )
         (asserts! (is-eq caller DEPLOYER) ERR_NOT_AUTHORIZED)
-        
+
         (map-set dexes dex-id {
             dex-contract: dex-contract,
             pre-contract: pre-contract,
+            bonus-contract: bonus-contract,
             x-token: x-token,
             y-token: y-token,
             x-target: x-target,
@@ -448,13 +467,14 @@
             tokens-per-seat: tokens-per-seat,
             creation-height: creation-height
         })
-        
+
         (print {
             action: "edit-dex",
             caller: caller,
             dex-id: dex-id,
             dex-contract: dex-contract,
             pre-contract: pre-contract,
+            bonus-contract: bonus-contract,
             x-token: x-token,
             y-token: y-token,
             x-target: x-target,
@@ -596,4 +616,58 @@
 
 (define-read-only (is-gated)
   (var-get gated)
+)
+
+(define-constant ERR_NOT_REGISTERED_BONUS (err u1009))
+
+(define-private (is-registered-bonus (caller principal))
+    (is-some (map-get? bonus-contracts caller))
+)
+
+(define-public (log-bonus-deposit
+    (agent-amount uint)
+    (originator-amount uint)
+)
+    (begin
+        (asserts! (is-registered-bonus contract-caller) ERR_NOT_REGISTERED_BONUS)
+        (print {
+            action: "bonus-deposit",
+            bonus-contract: contract-caller,
+            agent-amount: agent-amount,
+            originator-amount: originator-amount
+        })
+        (ok true)
+    )
+)
+
+(define-public (log-bonus-claim-agent
+    (claimer principal)
+    (amount uint)
+)
+    (begin
+        (asserts! (is-registered-bonus contract-caller) ERR_NOT_REGISTERED_BONUS)
+        (print {
+            action: "bonus-claim-agent",
+            bonus-contract: contract-caller,
+            claimer: claimer,
+            amount: amount
+        })
+        (ok true)
+    )
+)
+
+(define-public (log-bonus-claim-originator
+    (claimer principal)
+    (amount uint)
+)
+    (begin
+        (asserts! (is-registered-bonus contract-caller) ERR_NOT_REGISTERED_BONUS)
+        (print {
+            action: "bonus-claim-originator",
+            bonus-contract: contract-caller,
+            claimer: claimer,
+            amount: amount
+        })
+        (ok true)
+    )
 )
