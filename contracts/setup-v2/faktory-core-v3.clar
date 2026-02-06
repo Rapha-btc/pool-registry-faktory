@@ -566,6 +566,18 @@
                             y-supply: (get y-supply info),
                             creation-height: (get creation-height info),
                             pre-contract: pre-principal })
+                        ;; Detect if distribution was just triggered (market was open before buy, now closed)
+                        (match (contract-call? pre is-market-open)
+                            open-val (if open-val
+                                (begin (print {
+                                    type: "distribution-initialized",
+                                    pre-contract: pre-principal,
+                                    token-contract: (get y-token info),
+                                    distribution-height: burn-block-height,
+                                    ft-supply: (get y-supply info)
+                                }) true)
+                                true)
+                            err-val true)
                         (ok actual-seats))
                     (if (is-eq operation OP_REMOVE_LIQUIDITY)
                         (let ((user-seats (try! (contract-call? pre refund (some tx-owner)))))
@@ -671,3 +683,50 @@
         (ok true)
     )
 )
+
+;; Pre-launch routing functions
+;; Routes claim/fee-airdrop through core-v3 (like process does for buy/refund)
+;; so a single chainhook on core-v3 catches all pre-launch events
+
+(define-public (process-claim
+    (pre <pre-trait>)
+    (token <token-trait>)
+    (owner (optional principal)))
+  (let (
+      (tx-owner (default-to tx-sender owner))
+      (pre-principal (contract-of pre))
+      (pre-id (map-get? pre-contracts pre-principal))
+      (pre-info (match pre-id
+                    id (map-get? dexes id)
+                    none))
+    )
+    (match pre-info
+        info (let ((claimed-amount (try! (contract-call? pre claim-on-behalf token tx-owner))))
+                (print {
+                    type: "claim",
+                    sender: tx-owner,
+                    amount-claimed: claimed-amount,
+                    pre-contract: pre-principal
+                })
+                (ok claimed-amount))
+        ERR_POOL_NOT_FOUND)))
+
+(define-public (process-fee-airdrop
+    (pre <pre-trait>))
+  (let (
+      (pre-principal (contract-of pre))
+      (pre-id (map-get? pre-contracts pre-principal))
+      (pre-info (match pre-id
+                    id (map-get? dexes id)
+                    none))
+    )
+    (match pre-info
+        info (let ((total-distributed (try! (contract-call? pre trigger-fee-airdrop))))
+                (print {
+                    type: "fee-airdrop",
+                    pre-contract: pre-principal,
+                    total-distributed: total-distributed,
+                    timestamp: burn-block-height
+                })
+                (ok total-distributed))
+        ERR_POOL_NOT_FOUND)))
