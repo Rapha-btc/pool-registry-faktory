@@ -54,7 +54,8 @@
         (some 0x01)
       )))
     )
-    (ok (get dy result))
+    ;; B-to-A: pool returns raw dy, FAKTORY_FEE (1/1000) skimmed from sBTC output
+    (ok (/ (* (get dy result) u999) u1000))
   )
 )
 

@@ -3,7 +3,7 @@ import { uintCV, ClarityVersion } from "@stacks/transactions";
 import { SimulationBuilder } from "stxer";
 
 const DEPLOYER = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22";
-const PEPE_USER = "SP3YM5YRTKHTWRC82K5DZJBY9XW0K4AX0P9PM5VSH";
+const PEPE_USER = "SP2022PJ05WB4VXP8HTVFAFE186AM94A4WYQ1RQY2"; // 710M PEPE (3 decimals)
 
 const amounts = [
   1000000000n,  // 1M PEPE
