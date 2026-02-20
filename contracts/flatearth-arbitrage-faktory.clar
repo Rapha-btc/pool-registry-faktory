@@ -343,12 +343,13 @@
 )
 
 (define-read-only (simulate-flat-to-sbtc (flat-amount uint))
-  (get dy (unwrap-panic (contract-call?
+  ;; Protocol fee: 1/1000 skimmed from sBTC output
+  (/ (* (get dy (unwrap-panic (contract-call?
     'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.flatearth-faktory-pool-v2
     quote
     flat-amount
     (some 0x01)
-  )))
+  ))) u999) u1000)
 )
 
 (define-read-only (simulate-sbtc-to-stx (sbtc-amount uint))
@@ -443,6 +444,7 @@
 )
 
 (define-read-only (simulate-sbtc-to-flat (sbtc-amount uint))
+  ;; A-to-B: quote already nets FAKTORY_FEE from sBTC input
   (get dy (unwrap-panic (contract-call?
     'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.flatearth-faktory-pool-v2
     quote
