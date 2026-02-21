@@ -6,9 +6,8 @@ const DEPLOYER = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22";
 const LEO_USER = "SP17A1AM4TNYFPAZ75Z84X3D6R2F6DTJBDJ6B0YF"; // 500M LEO (6 decimals)
 
 const amounts = [
-  1000000000000n,  // 1M LEO
-  5000000000000n,  // 5M LEO
-  12000000000000n, // 12M LEO
+  90000000000n,   // 90K LEO
+  190000000000n,  // 190K LEO
 ];
 
 const checkFns = [
@@ -33,45 +32,41 @@ const arbFns = [
   "arb-alex-vel-fak",
 ];
 
-// Strip comments/blanks to stay under stxer's tx size limit
-const source = fs.readFileSync("./contracts/leo-arbitrage-faktory.clar", "utf8")
+const source = fs.readFileSync("./contracts/leo-arbitrage-faktory-v2.clar", "utf8")
   .split("\n").filter(l => !l.trim().startsWith(";;") && l.trim() !== "").join("\n");
 
 const builder = SimulationBuilder.new()
   .withSender(DEPLOYER)
   .addContractDeploy({
-    contract_name: "leo-arbitrage-faktory",
+    contract_name: "leo-arbitrage-faktory-v2",
     source_code: source,
     clarity_version: ClarityVersion.Clarity3,
   })
-  // Approve arb contract as caller in fakfun-core-v2
   .addContractCall({
     contract_id: `${DEPLOYER}.fakfun-core-v2`,
     function_name: "approve-caller",
     function_args: [
-      contractPrincipalCV(DEPLOYER, "leo-arbitrage-faktory"),
+      contractPrincipalCV(DEPLOYER, "leo-arbitrage-faktory-v2"),
     ],
   })
   .withSender(LEO_USER);
 
-console.log("\n=== LEO ARBITRAGE — 8 ROUTES ===\n");
+console.log("\n=== LEO ARBITRAGE v2 — 8 ROUTES ===\n");
 
-// Check all routes at all amounts
 for (const amount of amounts) {
   for (const fn of checkFns) {
     builder.addEvalCode(
-      `${DEPLOYER}.leo-arbitrage-faktory`,
+      `${DEPLOYER}.leo-arbitrage-faktory-v2`,
       `(${fn} u${amount})`
     );
   }
 }
 
-// Execute all 4 routes with 1M LEO
-const EXEC_AMOUNT = 1000000000000n;
+const EXEC_AMOUNT = 90000000000n; // 90K LEO
 
 for (const fn of arbFns) {
   builder.addContractCall({
-    contract_id: `${DEPLOYER}.leo-arbitrage-faktory`,
+    contract_id: `${DEPLOYER}.leo-arbitrage-faktory-v2`,
     function_name: fn,
     function_args: [uintCV(EXEC_AMOUNT), uintCV(1)],
   });
