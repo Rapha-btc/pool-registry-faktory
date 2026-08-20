@@ -7,7 +7,13 @@ three differences called out in the contract header: the fak leg goes through
 `fakfun-core-v2`, the ALEX leg is the direct `wstx-v2`/`wmia` pool, and MIA is
 6-decimal so the wmia legs convert `* u100` in and `/ u100` out.
 
-**Status: not deployed.** `SPV9K21….mia-smart-faktory` is 404 on mainnet.
+**Status: DEPLOYED** at `SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-smart-faktory`
+(Clarity 5). The on-chain bytes are identical to `contracts/d-mia-smart-faktory.clar`
+(the comment-stripped, `clarinet format` deploy variant), which is in turn
+**semantically identical** to `contracts/mia-smart-faktory.clar` — the source the
+sims deploy and test. Clarity discards comments and insignificant whitespace at
+parse time, so the tested behaviour is the deployed behaviour, verified by a
+code-only byte compare.
 
 ---
 
@@ -76,7 +82,7 @@ it, so a regression is a non-zero exit rather than something to spot by eye.
 node verify-mia-smart.js
 ```
 
-**Result: [45/45 green](https://stxer.xyz/simulations/mainnet/161fad64b90a488d0de47dd802ae40f9)** (2026-08-20).
+**Result: [50/50 green](https://stxer.xyz/simulations/mainnet/1a822d1c3d08561916e9c5632a72119b)** (2026-08-20), Clarity 5 deploy included.
 
 | Group | Cases | Covers |
 |---|---|---|
@@ -86,6 +92,7 @@ node verify-mia-smart.js
 | `sell-for-sbtc` | 6 | same matrix |
 | `sell-for-stx` | 6 | same matrix |
 | `smart-*` wrappers | 4 | contract picks ratio and venue itself |
+| `*-dlmm` bridge | 5 | four DLMM routes at ratio 50 pool v-2, plus one at pool v-1 |
 
 Ratios 0 and 100 are the single-venue extremes; **50 is the one that matters
 most** for the allowance work, since both legs fire in one transaction and each
@@ -112,7 +119,7 @@ Impersonated principals: sBTC `SP2C7BCAP…QN2`, STX `SP9BP4PN…V51`, MIA
 node verify-mia-smart-negatives.js
 ```
 
-**Result: [12/12 green](https://stxer.xyz/simulations/mainnet/ba0afa26a2d6e26051bc0ef81ac5aade)** (2026-08-20).
+**Result: [12/12 green](https://stxer.xyz/simulations/mainnet/998f95322760d6e799a133a05f2bee2e)** (2026-08-20).
 
 | Case | Expected |
 |---|---|
@@ -155,14 +162,92 @@ fails, no funds move) but it is an unreadable failure for anyone integrating.
 `ERR-NO-PROFIT` (u1001) is declared and never used anywhere in the contract.
 Either wire it up or drop it.
 
-## 5. Remaining coverage gaps
+## 5. Named-constant hoist
 
-- **Size sweep.** One amount per direction. Slippage and the optimal-ratio
-  maths are size-dependent, and dust-scale sells (31 sats on 100 MIA) sit where
-  integer truncation dominates.
-- **Property fuzzing.** No Rendezvous target yet. The invariant worth writing
-  first: *total-out is never worse than the better single-venue route* - that
-  is the entire premise of splitting, and nothing currently tests it.
+The venue callees and their trait/token args in the **private** swap legs
+(`fakfun-core-v2`, `xyk-core-v-1-2`, `amm-pool-v2-01`, `univ2-pool`, plus the
+pool/token principals) are now named constants — one definition per principal, so
+a wrong address is a compile error in one place rather than a typo buried in the
+tenth call site. `MIA`/`SBTC`/`MIA-ASSET`/`SBTC-ASSET`/`CONTRACT` were already
+constants.
+
+The read-only `simulate-*` / `get-*-liquidity` callees **keep their literals** —
+this is not stylistic. A `contract-call?` in a `define-read-only` needs a literal
+callee for the analyzer to prove the called function is itself read-only; a
+constant callee fails deploy with *"expecting read-only statements, detected a
+writing operation"*. `clarinet check` does **not** catch this — it passed a
+full-constant version that the node rejected at deploy. The rule was found only
+by running the stxer sim with the deploy step included, which is why every
+constant change here is re-verified on the fork, not just checked.
+
+## 6. DLMM bridge (additive)
+
+The BitFlow/Velar router above is untouched. Four dedicated functions —
+`buy-with-{sbtc,stx}-dlmm`, `sell-for-{sbtc,stx}-dlmm` — route the sBTC↔STX
+middle leg through **Bitflow DLMM** instead. DLMM's concentrated liquidity prices
+that leg tighter, so more of the Faktory-vs-ALEX gap survives the crossing. On
+the fork, `sell-for-stx` at ratio 50 returned **186,889 STX via DLMM vs 161,355
+BitFlow / 156,237 Velar** — the same split, ~16% more out.
+
+- **Three pool versions** selectable via a `dlmm-pool` arg (`u1`/`u2`/`u3` →
+  `dlmm-pool-stx-sbtc-v-N-bps-15`). A bin-exhaustion partial fill reverts
+  `ERR-PARTIAL-FILL` (u1003) rather than stranding funds.
+- **Off-chain priced.** DLMM has no read-only quote (bin walk), so it is *not* in
+  the on-chain `compare-*` routers. The FE/keeper prices DLMM off-chain and calls
+  these variants directly; `min-out` is the slippage guard. This is deliberate:
+  the smart router does on-chain best-execution across BitFlow/Velar only, and the
+  arb keeper (`mia-arbitrage-faktory`) handles DLMM where off-chain comparison
+  belongs.
+
+## 7. Invariant + edge coverage
+
+`verify-mia-smart-coverage.js` asserts what the two suites above cannot — the
+happy-path run only checks each call returns `(ok …)`; it never checks the
+contract holds nothing afterward, or that the user actually received what the
+function claimed.
+
+```bash
+node verify-mia-smart-coverage.js
+```
+
+**Result: [28/28 green](https://stxer.xyz/simulations/mainnet/57ddf06a07c87040870d4143e17ff210)** (2026-08-20), Clarity 5 deploy included.
+
+| Scenario | Asserts |
+|---|---|
+| S1 buy conservation + payout | user MIA delta **==** returned `total-token-out`; contract holds **0** MIA/sBTC/STX after |
+| S2 sell conservation + payout | user sBTC delta **==** returned `total-sbtc-out`; contract holds 0 |
+| S3 DLMM ratio extremes | ratio 0 (full bridge) and 100 (all Faktory) on all four `*-dlmm` fns; contract holds 0 after |
+| S4 DLMM negatives | ratio 101 → `ERR-INVALID-RATIO` (u1002); huge `min-out` → `ERR-SLIPPAGE` (u1000) |
+| S5 `ERR-PARTIAL-FILL` | a 20k-sat sBTC→STX bridge on the thin v-3 pool (~20 STX) can't fill → guard reverts `u1003`, contract holds 0 — funds protected |
+| S6 3-pool dispatch | a 2k-sat bridge fits v-3 → `(ok …)`, proving the selector reaches all three versions |
+
+Block advances between scenario groups keep each under the per-block execution
+cost cap — DLMM bin-walks are compute-heavy and a single block overflows.
+
+**Conservation is the load-bearing check.** Every path pulls funds in, swaps
+through external venues, and pays out — and after each, the contract's MIA, sBTC
+and STX balances read exactly `u0`. Combined with the payout-delta check (the
+user receives precisely the returned figure) and the allowance-abort proof from
+§4, nothing leaks and nothing is stranded, on success or on revert.
+
+### Live-state notes (not bugs)
+
+The DLMM pools move: at test time v-2 held 1.58 BTC / 412k STX and v-3 was nearly
+empty (~20 STX). The partial-fill guard only fires when a bridge genuinely exceeds
+available bin depth — which is exactly the intended safety behaviour. Before
+relying on a DLMM route in production, re-check which pool version is liquid
+(Bitflow is mid-migration across v-1/v-2/v-3).
+
+## 8. Remaining coverage gaps
+
+- **Size sweep.** One amount per direction on the AMM legs. Slippage and the
+  optimal-ratio maths are size-dependent, and dust-scale sells (31 sats on 100
+  MIA) sit where integer truncation dominates.
+- **Property fuzzing (next).** No Rendezvous target yet. The invariant worth
+  writing first: *total-out is never worse than the better single-venue route* —
+  that is the entire premise of splitting, and nothing currently tests it. RV in
+  simnet needs the external venues mocked (the swap legs call mainnet pools that
+  simnet doesn't have), the same pattern used for the vault's testable twin.
 - **Adversarial pool.** No test with a hostile DEX callee. The allowances are
   what bound that blast radius, and the sabotaged-twin case is the closest
   proxy so far.
