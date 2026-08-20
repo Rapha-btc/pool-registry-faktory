@@ -22,6 +22,45 @@ contract_id = 'SP29D6YMDNAKN1P045T6Z817RTE1AC0JAA99WAX2B.prelaunch-faktory-trait
 
 [[project.requirements]]
 contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.faktory-dex-trait'
+# Dependencies of mia-smart-faktory (fak pool, ALEX wstx/wmia, bitflow xyk,
+# velar univ2). Declared now that the contract is in the manifest.
+
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-core-v2'
+
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-pool-faktory'
+
+[[project.requirements]]
+contract_id = 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2'
+
+[[project.requirements]]
+contract_id = 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2'
+
+[[project.requirements]]
+contract_id = 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1'
+
+[[project.requirements]]
+contract_id = 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2'
+
+[[project.requirements]]
+contract_id = 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01'
+
+[[project.requirements]]
+contract_id = 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2'
+
+[[project.requirements]]
+contract_id = 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wmia'
+
+[[project.requirements]]
+contract_id = 'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-pool-v1_0_0-0070'
+
+[[project.requirements]]
+contract_id = 'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-fees-v1_0_0-0070'
+
+[[project.requirements]]
+contract_id = 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx'
+
 [contracts.faktory-pool-registry]
 path = 'contracts/faktory-pool-registry.clar'
 clarity_version = 3
@@ -36,6 +75,14 @@ epoch = '3.1'
 path = 'contracts/pool-registry-faktory.clar'
 clarity_version = 3
 epoch = '3.1'
+
+# Clarity 5, unlike the rest of this project: mia-smart-faktory uses
+# as-contract? with with-ft / with-stx allowances, which do not exist before
+# Clarity 5. Everything else here predates that and stays on 3.
+[contracts.mia-smart-faktory]
+path = 'contracts/mia-smart-faktory.clar'
+clarity_version = 5
+epoch = 'latest'
 
 [contracts.prelaunch-faktory-trait]
 path = 'contracts/prelaunch-faktory-trait.clar'
