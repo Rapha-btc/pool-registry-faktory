@@ -104,18 +104,65 @@ Impersonated principals: sBTC `SP2C7BCAP…QN2`, STX `SP9BP4PN…V51`, MIA
   small enough that integer truncation dominates - do not read a ratio
   comparison at that scale as signal.
 
-## 4. Coverage gaps
+## 4. Error paths and the allowance-binding proof
 
-Happy paths are covered. Not yet:
+`verify-mia-smart-negatives.js` covers what the happy-path run cannot.
 
-- **Error paths.** `ERR-INVALID-RATIO` (u1002, ratio > 100), `ERR-SLIPPAGE`
-  (u1000, `min-out` above what the split returns), `ERR-NO-PROFIT` (u1001).
-- **Allowance negatives.** No test yet proves an allowance *binds* - i.e. that
-  a deliberately under-declared allowance aborts. Today the sims only show the
-  correct ones do not get in the way.
-- **Size sweep.** One amount per direction. Slippage behaviour and the
-  optimal-ratio maths are size-dependent, and dust-scale sells (31 sats) sit
-  where truncation dominates.
-- **Property fuzzing.** No Rendezvous target. The invariant worth writing
-  first: *total-out is never less than the better single-venue route* - that is
-  the entire premise of splitting.
+```bash
+node verify-mia-smart-negatives.js
+```
+
+**Result: [12/12 green](https://stxer.xyz/simulations/mainnet/ba0afa26a2d6e26051bc0ef81ac5aade)** (2026-08-20).
+
+| Case | Expected |
+|---|---|
+| `ratio = 101` on all four entry points | `ERR-INVALID-RATIO` (u1002) |
+| `min-out = 1e30` on all four | `ERR-SLIPPAGE` (u1000) |
+| Under-declared allowance | tx aborts |
+| Same call, correct allowance | `(ok …)` |
+
+The last two are the point. A harness that only shows correct allowances stay
+out of the way cannot show they do anything, so this deploys a **sabotaged
+twin** identical except that one leg's allowance is a single sat short of what
+it sends. That transaction aborts (`err u0`, allowance violation) while the
+control succeeds - so the allowances are demonstrably load-bearing rather than
+decorative.
+
+### Bug found and fixed: ERR-INVALID-RATIO was unreachable
+
+The negative run first came back `(err none)` instead of `u1002` on all four
+functions. Cause:
+
+```clarity
+(let (
+  (fak-amount (/ (* sbtc-amount fak-ratio) TOTAL))   ;; ratio 101 -> 101000
+  (alex-amount (- sbtc-amount fak-amount))            ;; 100000 - 101000 -> UNDERFLOW
+)
+  (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)   ;; never reached
+```
+
+`let` bindings evaluate before the body, so any ratio above 100 underflowed and
+panicked before the guard could run. Callers got an opaque runtime abort with
+no error code. The guard is now hoisted above the `let` in all four functions,
+and the same run returns a clean `u1002`.
+
+**`b-smart-faktory` is deployed with this same structure** - worth checking
+whether it shares the defect. It is not exploitable (the transaction still
+fails, no funds move) but it is an unreadable failure for anyone integrating.
+
+### Dead code
+
+`ERR-NO-PROFIT` (u1001) is declared and never used anywhere in the contract.
+Either wire it up or drop it.
+
+## 5. Remaining coverage gaps
+
+- **Size sweep.** One amount per direction. Slippage and the optimal-ratio
+  maths are size-dependent, and dust-scale sells (31 sats on 100 MIA) sit where
+  integer truncation dominates.
+- **Property fuzzing.** No Rendezvous target yet. The invariant worth writing
+  first: *total-out is never worse than the better single-venue route* - that
+  is the entire premise of splitting, and nothing currently tests it.
+- **Adversarial pool.** No test with a hostile DEX callee. The allowances are
+  what bound that blast radius, and the sabotaged-twin case is the closest
+  proxy so far.

@@ -34,11 +34,16 @@
     (min-token-out uint)
     (fak-ratio uint)
     (flag bool))
-  (let (
+  (begin
+    ;; Guard BEFORE the let: the bindings below underflow when the ratio
+    ;; exceeds 100 (sbtc-amount - fak-amount goes negative), so an assert placed
+    ;; after them never runs and the caller gets an opaque runtime abort
+    ;; instead of ERR-INVALID-RATIO.
+    (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)
+    (let (
     (fak-amount (/ (* sbtc-amount fak-ratio) TOTAL))
     (alex-amount (- sbtc-amount fak-amount))
-  )
-    (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)
+    )
 
     (try! (contract-call?
       SBTC
@@ -91,18 +96,23 @@
       })
     )
   )
-)
+))
 
 (define-public (buy-with-stx
     (stx-amount uint)
     (min-token-out uint)
     (alex-ratio uint)
     (flag bool))
-  (let (
+  (begin
+    ;; Guard BEFORE the let: the bindings below underflow when the ratio
+    ;; exceeds 100 (stx-amount - alex-amount goes negative), so an assert placed
+    ;; after them never runs and the caller gets an opaque runtime abort
+    ;; instead of ERR-INVALID-RATIO.
+    (asserts! (<= alex-ratio TOTAL) ERR-INVALID-RATIO)
+    (let (
     (alex-amount (/ (* stx-amount alex-ratio) TOTAL))
     (fak-amount (- stx-amount alex-amount))
-  )
-    (asserts! (<= alex-ratio TOTAL) ERR-INVALID-RATIO)
+    )
 
     (try! (stx-transfer? stx-amount tx-sender CONTRACT))
 
@@ -148,18 +158,23 @@
       })
     )
   )
-)
+))
 
 (define-public (sell-for-sbtc
     (token-amount uint)
     (min-sbtc-out uint)
     (fak-ratio uint)
     (flag bool))
-  (let (
+  (begin
+    ;; Guard BEFORE the let: the bindings below underflow when the ratio
+    ;; exceeds 100 (token-amount - fak-amount goes negative), so an assert placed
+    ;; after them never runs and the caller gets an opaque runtime abort
+    ;; instead of ERR-INVALID-RATIO.
+    (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)
+    (let (
     (fak-amount (/ (* token-amount fak-ratio) TOTAL))
     (alex-amount (- token-amount fak-amount))
-  )
-    (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)
+    )
 
     (try! (contract-call?
       MIA
@@ -212,18 +227,23 @@
       })
     )
   )
-)
+))
 
 (define-public (sell-for-stx
     (token-amount uint)
     (min-stx-out uint)
     (alex-ratio uint)
     (flag bool))
-  (let (
+  (begin
+    ;; Guard BEFORE the let: the bindings below underflow when the ratio
+    ;; exceeds 100 (token-amount - alex-amount goes negative), so an assert placed
+    ;; after them never runs and the caller gets an opaque runtime abort
+    ;; instead of ERR-INVALID-RATIO.
+    (asserts! (<= alex-ratio TOTAL) ERR-INVALID-RATIO)
+    (let (
     (alex-amount (/ (* token-amount alex-ratio) TOTAL))
     (fak-amount (- token-amount alex-amount))
-  )
-    (asserts! (<= alex-ratio TOTAL) ERR-INVALID-RATIO)
+    )
 
     (try! (contract-call?
       MIA
@@ -276,7 +296,7 @@
       })
     )
   )
-)
+))
 
 (define-read-only (calculate-optimal-ratio-sbtc-to-token (flag bool))
   (let (
