@@ -5,19 +5,19 @@
 
 (define-constant DEPLOYER tx-sender)
 
+(define-constant MIA 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2)
+(define-constant CORE 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-core-v2)
+(define-constant XYK-CORE 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2)
+(define-constant DLMM-ROUTER 'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-swap-router-v-1-2)
+
 (define-public (arb-fak-bit-alex
     (amt-in uint)
     (min-amt-out uint)
   )
   (begin
-    (try! (contract-call? 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-      transfer amt-in tx-sender current-contract none
-    ))
+    (try! (contract-call? MIA transfer amt-in tx-sender current-contract none))
     (let (
-        (sbtc-out (try! (as-contract?
-          ((with-ft 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-            "miamicoin" amt-in
-          ))
+        (sbtc-out (try! (as-contract? ((with-ft MIA "miamicoin" amt-in))
           (try! (swap-token-to-sbtc amt-in))
         )))
         (stx-out (try! (as-contract?
@@ -46,14 +46,9 @@
     (min-amt-out uint)
   )
   (begin
-    (try! (contract-call? 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-      transfer amt-in tx-sender current-contract none
-    ))
+    (try! (contract-call? MIA transfer amt-in tx-sender current-contract none))
     (let (
-        (sbtc-out (try! (as-contract?
-          ((with-ft 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-            "miamicoin" amt-in
-          ))
+        (sbtc-out (try! (as-contract? ((with-ft MIA "miamicoin" amt-in))
           (try! (swap-token-to-sbtc amt-in))
         )))
         (stx-out (try! (as-contract?
@@ -83,14 +78,9 @@
     (dlmm-pool uint)
   )
   (begin
-    (try! (contract-call? 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-      transfer amt-in tx-sender current-contract none
-    ))
+    (try! (contract-call? MIA transfer amt-in tx-sender current-contract none))
     (let (
-        (sbtc-out (try! (as-contract?
-          ((with-ft 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-            "miamicoin" amt-in
-          ))
+        (sbtc-out (try! (as-contract? ((with-ft MIA "miamicoin" amt-in))
           (try! (swap-token-to-sbtc amt-in))
         )))
         (stx-out (try! (as-contract?
@@ -119,14 +109,9 @@
     (min-amt-out uint)
   )
   (begin
-    (try! (contract-call? 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-      transfer amt-in tx-sender current-contract none
-    ))
+    (try! (contract-call? MIA transfer amt-in tx-sender current-contract none))
     (let (
-        (stx-out (try! (as-contract?
-          ((with-ft 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-            "miamicoin" amt-in
-          ))
+        (stx-out (try! (as-contract? ((with-ft MIA "miamicoin" amt-in))
           (try! (swap-token-to-stx-alex amt-in))
         )))
         (sbtc-out (try! (as-contract? ((with-stx stx-out)) (try! (swap-stx-to-sbtc stx-out)))))
@@ -153,14 +138,9 @@
     (min-amt-out uint)
   )
   (begin
-    (try! (contract-call? 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-      transfer amt-in tx-sender current-contract none
-    ))
+    (try! (contract-call? MIA transfer amt-in tx-sender current-contract none))
     (let (
-        (stx-out (try! (as-contract?
-          ((with-ft 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-            "miamicoin" amt-in
-          ))
+        (stx-out (try! (as-contract? ((with-ft MIA "miamicoin" amt-in))
           (try! (swap-token-to-stx-alex amt-in))
         )))
         (sbtc-out (try! (as-contract? ((with-stx stx-out))
@@ -190,14 +170,9 @@
     (dlmm-pool uint)
   )
   (begin
-    (try! (contract-call? 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-      transfer amt-in tx-sender current-contract none
-    ))
+    (try! (contract-call? MIA transfer amt-in tx-sender current-contract none))
     (let (
-        (stx-out (try! (as-contract?
-          ((with-ft 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-            "miamicoin" amt-in
-          ))
+        (stx-out (try! (as-contract? ((with-ft MIA "miamicoin" amt-in))
           (try! (swap-token-to-stx-alex amt-in))
         )))
         (sbtc-out (try! (as-contract? ((with-stx stx-out))
@@ -222,21 +197,16 @@
 )
 
 (define-private (pay-deployer (amt uint))
-  (as-contract?
-    ((with-ft 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-      "miamicoin" amt
-    ))
-    (try! (contract-call? 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-      transfer amt current-contract DEPLOYER none
-    ))
+  (as-contract? ((with-ft MIA "miamicoin" amt))
+    (try! (contract-call? MIA transfer amt current-contract DEPLOYER none))
   )
 )
 
 (define-private (swap-token-to-sbtc (amount uint))
   (let (
-      (result (try! (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-core-v2
-        execute 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-pool-faktory
-        amount (some 0x01)
+      (result (try! (contract-call? CORE execute
+        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-pool-faktory amount
+        (some 0x01)
       )))
       (raw-dy (get dy result))
     )
@@ -245,17 +215,16 @@
 )
 
 (define-private (swap-sbtc-to-token (sbtc-amount uint))
-  (let ((result (try! (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-core-v2
-      execute 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-pool-faktory
-      sbtc-amount (some 0x00)
+  (let ((result (try! (contract-call? CORE execute
+      'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-pool-faktory sbtc-amount
+      (some 0x00)
     ))))
     (ok (get dy result))
   )
 )
 
 (define-private (swap-sbtc-to-stx (sbtc-amount uint))
-  (let ((dy (try! (contract-call? 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2
-      swap-x-for-y
+  (let ((dy (try! (contract-call? XYK-CORE swap-x-for-y
       'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1
       'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
       'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2 sbtc-amount
@@ -266,8 +235,7 @@
 )
 
 (define-private (swap-stx-to-sbtc (stx-amount uint))
-  (let ((dx (try! (contract-call? 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2
-      swap-y-for-x
+  (let ((dx (try! (contract-call? XYK-CORE swap-y-for-x
       'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1
       'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token
       'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2 stx-amount u1
@@ -305,26 +273,20 @@
     (sbtc-amount uint)
   )
   (let ((res (try! (if (is-eq pool-ver u1)
-      (contract-call?
-        'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-swap-router-v-1-2
-        swap-y-for-x-simple-multi
+      (contract-call? DLMM-ROUTER swap-y-for-x-simple-multi
         'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-1-bps-15
         'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2
         'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token sbtc-amount u1
         none
       )
       (if (is-eq pool-ver u2)
-        (contract-call?
-          'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-swap-router-v-1-2
-          swap-y-for-x-simple-multi
+        (contract-call? DLMM-ROUTER swap-y-for-x-simple-multi
           'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-2-bps-15
           'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2
           'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token sbtc-amount u1
           none
         )
-        (contract-call?
-          'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-swap-router-v-1-2
-          swap-y-for-x-simple-multi
+        (contract-call? DLMM-ROUTER swap-y-for-x-simple-multi
           'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-3-bps-15
           'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2
           'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token sbtc-amount u1
@@ -342,26 +304,20 @@
     (stx-amount uint)
   )
   (let ((res (try! (if (is-eq pool-ver u1)
-      (contract-call?
-        'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-swap-router-v-1-2
-        swap-x-for-y-simple-multi
+      (contract-call? DLMM-ROUTER swap-x-for-y-simple-multi
         'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-1-bps-15
         'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2
         'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token stx-amount u1
         none
       )
       (if (is-eq pool-ver u2)
-        (contract-call?
-          'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-swap-router-v-1-2
-          swap-x-for-y-simple-multi
+        (contract-call? DLMM-ROUTER swap-x-for-y-simple-multi
           'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-2-bps-15
           'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2
           'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token stx-amount u1
           none
         )
-        (contract-call?
-          'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-swap-router-v-1-2
-          swap-x-for-y-simple-multi
+        (contract-call? DLMM-ROUTER swap-x-for-y-simple-multi
           'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-3-bps-15
           'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2
           'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token stx-amount u1
@@ -625,14 +581,8 @@
 (define-public (rescue-token (amount uint))
   (begin
     (asserts! (is-eq tx-sender DEPLOYER) ERR-NOT-AUTHORIZED)
-    (as-contract?
-      ((with-ft 'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2
-        "miamicoin" amount
-      ))
-      (try! (contract-call?
-        'SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2 transfer
-        amount current-contract DEPLOYER none
-      ))
+    (as-contract? ((with-ft MIA "miamicoin" amount))
+      (try! (contract-call? MIA transfer amount current-contract DEPLOYER none))
     )
   )
 )
