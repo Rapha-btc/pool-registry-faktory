@@ -153,6 +153,39 @@ b.withSender(MIA_HOLDER).addContractCall({
 });
 expectOk("smart-sell-for-stx");
 
+// --- dedicated DLMM bridge path (ratio=50 split; v-2 liquid pool, one v-1) ---
+b.withSender(SBTC_HOLDER).addContractCall({
+  contract_id: C,
+  function_name: "buy-with-sbtc-dlmm",
+  function_args: [uintCV(SBTC_AMOUNT), uintCV(1), uintCV(50n), uintCV(2n)],
+});
+expectOk("buy-with-sbtc-dlmm ratio=50 pool=v2");
+b.withSender(STX_HOLDER).addContractCall({
+  contract_id: C,
+  function_name: "buy-with-stx-dlmm",
+  function_args: [uintCV(STX_AMOUNT), uintCV(1), uintCV(50n), uintCV(2n)],
+});
+expectOk("buy-with-stx-dlmm ratio=50 pool=v2");
+b.withSender(MIA_HOLDER).addContractCall({
+  contract_id: C,
+  function_name: "sell-for-sbtc-dlmm",
+  function_args: [uintCV(MIA_AMOUNT), uintCV(1), uintCV(50n), uintCV(2n)],
+});
+expectOk("sell-for-sbtc-dlmm ratio=50 pool=v2");
+b.withSender(MIA_HOLDER).addContractCall({
+  contract_id: C,
+  function_name: "sell-for-stx-dlmm",
+  function_args: [uintCV(MIA_AMOUNT), uintCV(1), uintCV(50n), uintCV(2n)],
+});
+expectOk("sell-for-stx-dlmm ratio=50 pool=v2");
+// prove the 3-pool selector reaches v-1 (legacy TVL) too
+b.withSender(SBTC_HOLDER).addContractCall({
+  contract_id: C,
+  function_name: "buy-with-sbtc-dlmm",
+  function_args: [uintCV(SBTC_AMOUNT), uintCV(1), uintCV(50n), uintCV(1n)],
+});
+expectOk("buy-with-sbtc-dlmm ratio=50 pool=v1");
+
 function decodeTx(s) {
   const r = s?.Result?.Transaction;
   if (!r) return "<no tx>";

@@ -8,6 +8,7 @@
 (define-constant ERR-SLIPPAGE (err u1000))
 (define-constant ERR-NO-PROFIT (err u1001))
 (define-constant ERR-INVALID-RATIO (err u1002))
+(define-constant ERR-PARTIAL-FILL (err u1003))
 
 ;; Clarity 4+ rejects as-contract inside define-constant; current-contract is
 ;; the keyword that replaces the old (as-contract tx-sender) idiom.
@@ -25,6 +26,22 @@
 ;; transfer under that allowance abort.
 (define-constant MIA-ASSET "miamicoin")
 (define-constant SBTC-ASSET "sbtc-token")
+
+(define-constant CORE 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-core-v2)
+(define-constant POOL 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-pool-faktory)
+(define-constant XYK-CORE 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2)
+(define-constant XYK-POOL 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1)
+(define-constant STX-TOKEN 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2)
+(define-constant ALEX-POOL 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01)
+(define-constant WSTX-V2 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2)
+(define-constant WMIA 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wmia)
+(define-constant VELAR-POOL 'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-pool-v1_0_0-0070)
+(define-constant VELAR-FEES 'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-fees-v1_0_0-0070)
+(define-constant WSTX 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx)
+(define-constant DLMM-ROUTER 'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-swap-router-v-1-2)
+(define-constant DLMM-POOL-1 'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-1-bps-15)
+(define-constant DLMM-POOL-2 'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-2-bps-15)
+(define-constant DLMM-POOL-3 'SM1FKXGNZJWSTWDWXQZJNF7B5TV5ZB235JTCXYXKD.dlmm-pool-stx-sbtc-v-3-bps-15)
 
 (define-constant ALEX-FACTOR u100000000)
 (define-constant TOTAL u100)
@@ -456,9 +473,9 @@
 (define-private (swap-token-to-sbtc (token-amount uint))
   (let (
       (result (try! (contract-call?
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-core-v2
+        CORE
         execute
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-pool-faktory
+        POOL
         token-amount
         (some 0x01)
       )))
@@ -473,9 +490,9 @@
 (define-private (swap-sbtc-to-token (sbtc-amount uint))
   (let (
       (result (try! (contract-call?
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-core-v2
+        CORE
         execute
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.mia-pool-faktory
+        POOL
         sbtc-amount
         (some 0x00)
       )))
@@ -487,11 +504,11 @@
 (define-private (swap-sbtc-to-stx (sbtc-amount uint))
   (let (
       (dy (try! (contract-call?
-        'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2
+        XYK-CORE
         swap-x-for-y
-        'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1
+        XYK-POOL
         SBTC
-        'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2
+        STX-TOKEN
         sbtc-amount
         u1
       )))
@@ -503,11 +520,11 @@
 (define-private (swap-stx-to-sbtc (stx-amount uint))
   (let (
       (dx (try! (contract-call?
-        'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2
+        XYK-CORE
         swap-y-for-x
-        'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-sbtc-stx-v-1-1
+        XYK-POOL
         SBTC
-        'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.token-stx-v-1-2
+        STX-TOKEN
         stx-amount
         u1
       )))
@@ -521,10 +538,10 @@
 (define-private (swap-stx-to-token (stx-amount uint))
   (let (
       (result (try! (contract-call?
-        'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+        ALEX-POOL
         swap-x-for-y
-        'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
-        'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wmia
+        WSTX-V2
+        WMIA
         u100000000
         stx-amount
         none
@@ -539,10 +556,10 @@
 (define-private (swap-token-to-stx (token-amount uint))
      (let (
        (result (try! (contract-call?
-         'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-pool-v2-01
+         ALEX-POOL
          swap-y-for-x
-         'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wstx-v2
-         'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wmia
+         WSTX-V2
+         WMIA
          u100000000
          (* token-amount u100)
          none
@@ -555,11 +572,11 @@
 (define-private (swap-sbtc-to-stx-velar (sbtc-amount uint))
   (let (
       (result (try! (contract-call?
-        'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-pool-v1_0_0-0070
+        VELAR-POOL
         swap
         SBTC
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
-        'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-fees-v1_0_0-0070
+        WSTX
+        VELAR-FEES
         sbtc-amount
         u1
       )))
@@ -571,11 +588,11 @@
 (define-private (swap-stx-to-sbtc-velar (stx-amount uint))
   (let (
       (result (try! (contract-call?
-        'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-pool-v1_0_0-0070
+        VELAR-POOL
         swap
-        'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx
+        WSTX
         SBTC
-        'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-fees-v1_0_0-0070
+        VELAR-FEES
         stx-amount
         u1
       )))
@@ -950,3 +967,239 @@
     })
   )
 )
+
+
+;; ============================================================================
+;; DEDICATED DLMM BRIDGE PATH (additive; the BitFlow/Velar router above is
+;; untouched). DLMM's concentrated liquidity usually prices sBTC<->STX tighter,
+;; so it captures more of the Faktory-vs-ALEX MIA gap. It has no read-only quote
+;; (bin walk), so it is NOT in the on-chain compare-*: the caller/keeper prices
+;; DLMM off-chain and calls these variants directly, passing the pool version
+;; (u1/u2/u3 -> dlmm-pool-stx-sbtc-v-N-bps-15) and its own fak/alex split ratio.
+;; min-out is the slippage floor; a bin-exhaustion partial fill reverts.
+;; ============================================================================
+
+(define-private (swap-sbtc-to-stx-dlmm (pool-ver uint) (sbtc-amount uint))
+  (let ((res (try! (if (is-eq pool-ver u1)
+      (contract-call? DLMM-ROUTER swap-y-for-x-simple-multi DLMM-POOL-1 STX-TOKEN SBTC sbtc-amount u1 none)
+    (if (is-eq pool-ver u2)
+      (contract-call? DLMM-ROUTER swap-y-for-x-simple-multi DLMM-POOL-2 STX-TOKEN SBTC sbtc-amount u1 none)
+      (contract-call? DLMM-ROUTER swap-y-for-x-simple-multi DLMM-POOL-3 STX-TOKEN SBTC sbtc-amount u1 none))))))
+    (asserts! (is-eq (get in res) sbtc-amount) ERR-PARTIAL-FILL)
+    (ok (get out res))
+  )
+)
+
+(define-private (swap-stx-to-sbtc-dlmm (pool-ver uint) (stx-amount uint))
+  (let ((res (try! (if (is-eq pool-ver u1)
+      (contract-call? DLMM-ROUTER swap-x-for-y-simple-multi DLMM-POOL-1 STX-TOKEN SBTC stx-amount u1 none)
+    (if (is-eq pool-ver u2)
+      (contract-call? DLMM-ROUTER swap-x-for-y-simple-multi DLMM-POOL-2 STX-TOKEN SBTC stx-amount u1 none)
+      (contract-call? DLMM-ROUTER swap-x-for-y-simple-multi DLMM-POOL-3 STX-TOKEN SBTC stx-amount u1 none))))))
+    (asserts! (is-eq (get in res) stx-amount) ERR-PARTIAL-FILL)
+    (ok (get out res))
+  )
+)
+
+(define-public (buy-with-sbtc-dlmm
+    (sbtc-amount uint)
+    (min-token-out uint)
+    (fak-ratio uint)
+    (dlmm-pool uint))
+  (begin
+    (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)
+    (let (
+    (fak-amount (/ (* sbtc-amount fak-ratio) TOTAL))
+    (alex-amount (- sbtc-amount fak-amount))
+    )
+    (try! (contract-call? SBTC transfer sbtc-amount tx-sender CONTRACT none))
+    (let (
+      (sender tx-sender)
+      (token-from-fak (if (> fak-amount u0)
+                      (try! (as-contract? ((with-ft SBTC SBTC-ASSET fak-amount)) (try! (swap-sbtc-to-token fak-amount))))
+                      u0))
+      (stx-from-dex (if (> alex-amount u0)
+                        (try! (as-contract? ((with-ft SBTC SBTC-ASSET alex-amount)) (try! (swap-sbtc-to-stx-dlmm dlmm-pool alex-amount))))
+                        u0))
+      (token-from-alex (if (> stx-from-dex u0)
+                      (try! (as-contract? ((with-stx stx-from-dex)) (try! (swap-stx-to-token (* stx-from-dex u100)))))
+                      u0))
+      (total-token-out (+ token-from-fak token-from-alex)))
+      (asserts! (>= total-token-out min-token-out) ERR-SLIPPAGE)
+      (try! (as-contract? ((with-ft MIA MIA-ASSET total-token-out))
+        (try! (contract-call? MIA transfer total-token-out CONTRACT sender none))))
+      (print {
+        type: "buy",
+        sender: tx-sender,
+        token-in: SBTC,
+        amount-in: sbtc-amount,
+        token-out: MIA,
+        amount-out: total-token-out,
+        token-from-fak: token-from-fak,
+        token-from-dex: token-from-alex,
+        pool-contract: CONTRACT,
+        min-y-out: min-token-out,
+        bridge: "dlmm",
+        dlmm-pool: dlmm-pool })
+      (ok {
+        sbtc-amount: sbtc-amount,
+        token-from-fak: token-from-fak,
+        token-from-dex: token-from-alex,
+        total-token-out: total-token-out
+      })
+    )
+  )
+))
+
+(define-public (buy-with-stx-dlmm
+    (stx-amount uint)
+    (min-token-out uint)
+    (alex-ratio uint)
+    (dlmm-pool uint))
+  (begin
+    (asserts! (<= alex-ratio TOTAL) ERR-INVALID-RATIO)
+    (let (
+    (alex-amount (/ (* stx-amount alex-ratio) TOTAL))
+    (fak-amount (- stx-amount alex-amount))
+    )
+    (try! (stx-transfer? stx-amount tx-sender CONTRACT))
+    (let (
+      (sender tx-sender)
+      (token-from-alex (if (> alex-amount u0)
+                      (try! (as-contract? ((with-stx alex-amount)) (try! (swap-stx-to-token (* alex-amount u100)))))
+                      u0))
+      (sbtc-from-dex (if (> fak-amount u0)
+                         (try! (as-contract? ((with-stx fak-amount)) (try! (swap-stx-to-sbtc-dlmm dlmm-pool fak-amount))))
+                         u0))
+      (token-from-fak (if (> sbtc-from-dex u0)
+                      (try! (as-contract? ((with-ft SBTC SBTC-ASSET sbtc-from-dex)) (try! (swap-sbtc-to-token sbtc-from-dex))))
+                      u0))
+      (total-token-out (+ token-from-alex token-from-fak))
+    )
+      (asserts! (>= total-token-out min-token-out) ERR-SLIPPAGE)
+      (try! (as-contract? ((with-ft MIA MIA-ASSET total-token-out))
+        (try! (contract-call? MIA transfer total-token-out CONTRACT sender none))))
+      (print {
+        type: "buy",
+        sender: tx-sender,
+        token-in: WSTX,
+        amount-in: stx-amount,
+        token-out: MIA,
+        amount-out: total-token-out,
+        token-from-alex: token-from-alex,
+        token-from-dex: token-from-fak,
+        pool-contract: CONTRACT,
+        min-y-out: min-token-out,
+        bridge: "dlmm",
+        dlmm-pool: dlmm-pool })
+      (ok {
+        stx-amount: stx-amount,
+        token-from-alex: token-from-alex,
+        token-from-fak: token-from-fak,
+        total-token-out: total-token-out
+      })
+    )
+  )
+))
+
+(define-public (sell-for-sbtc-dlmm
+    (token-amount uint)
+    (min-sbtc-out uint)
+    (fak-ratio uint)
+    (dlmm-pool uint))
+  (begin
+    (asserts! (<= fak-ratio TOTAL) ERR-INVALID-RATIO)
+    (let (
+    (fak-amount (/ (* token-amount fak-ratio) TOTAL))
+    (alex-amount (- token-amount fak-amount))
+    )
+    (try! (contract-call? MIA transfer token-amount tx-sender CONTRACT none))
+    (let (
+      (sender tx-sender)
+      (sbtc-from-fak (if (> fak-amount u0)
+                         (try! (as-contract? ((with-ft MIA MIA-ASSET fak-amount)) (try! (swap-token-to-sbtc fak-amount))))
+                         u0))
+      (stx-from-alex (if (> alex-amount u0)
+                        (try! (as-contract? ((with-ft MIA MIA-ASSET alex-amount)) (try! (swap-token-to-stx alex-amount))))
+                        u0))
+      (sbtc-from-dex (if (> stx-from-alex u0)
+                         (try! (as-contract? ((with-stx (/ stx-from-alex u100))) (try! (swap-stx-to-sbtc-dlmm dlmm-pool (/ stx-from-alex u100)))))
+                         u0))
+      (total-sbtc-out (+ sbtc-from-fak sbtc-from-dex))
+    )
+      (asserts! (>= total-sbtc-out min-sbtc-out) ERR-SLIPPAGE)
+      (try! (as-contract? ((with-ft SBTC SBTC-ASSET total-sbtc-out))
+        (try! (contract-call? SBTC transfer total-sbtc-out CONTRACT sender none))))
+      (print {
+        type: "sell",
+        sender: tx-sender,
+        token-in: MIA,
+        amount-in: token-amount,
+        token-out: SBTC,
+        amount-out: total-sbtc-out,
+        sbtc-from-fak: sbtc-from-fak,
+        sbtc-from-dex: sbtc-from-dex,
+        pool-contract: CONTRACT,
+        min-y-out: min-sbtc-out,
+        bridge: "dlmm",
+        dlmm-pool: dlmm-pool })
+      (ok {
+        token-amount: token-amount,
+        sbtc-from-fak: sbtc-from-fak,
+        sbtc-from-dex: sbtc-from-dex,
+        total-sbtc-out: total-sbtc-out
+      })
+    )
+  )
+))
+
+(define-public (sell-for-stx-dlmm
+    (token-amount uint)
+    (min-stx-out uint)
+    (alex-ratio uint)
+    (dlmm-pool uint))
+  (begin
+    (asserts! (<= alex-ratio TOTAL) ERR-INVALID-RATIO)
+    (let (
+    (alex-amount (/ (* token-amount alex-ratio) TOTAL))
+    (fak-amount (- token-amount alex-amount))
+    )
+    (try! (contract-call? MIA transfer token-amount tx-sender CONTRACT none))
+    (let (
+      (sender tx-sender)
+      (stx-from-alex (if (> alex-amount u0)
+                        (try! (as-contract? ((with-ft MIA MIA-ASSET alex-amount)) (try! (swap-token-to-stx alex-amount))))
+                        u0))
+      (sbtc-from-fak (if (> fak-amount u0)
+                         (try! (as-contract? ((with-ft MIA MIA-ASSET fak-amount)) (try! (swap-token-to-sbtc fak-amount))))
+                         u0))
+      (stx-from-dex (if (> sbtc-from-fak u0)
+                        (try! (as-contract? ((with-ft SBTC SBTC-ASSET sbtc-from-fak)) (try! (swap-sbtc-to-stx-dlmm dlmm-pool sbtc-from-fak))))
+                        u0))
+      (total-stx-out (+ (/ stx-from-alex u100) stx-from-dex))
+    )
+      (asserts! (>= total-stx-out min-stx-out) ERR-SLIPPAGE)
+      (try! (as-contract? ((with-stx total-stx-out))
+        (try! (stx-transfer? total-stx-out CONTRACT sender))))
+      (print {
+        type: "sell",
+        sender: tx-sender,
+        token-in: MIA,
+        amount-in: token-amount,
+        token-out: WSTX,
+        amount-out: total-stx-out,
+        stx-from-alex: stx-from-alex,
+        stx-from-dex: stx-from-dex,
+        pool-contract: CONTRACT,
+        min-y-out: min-stx-out,
+        bridge: "dlmm",
+        dlmm-pool: dlmm-pool })
+      (ok {
+        token-amount: token-amount,
+        stx-from-alex: stx-from-alex,
+        stx-from-dex: stx-from-dex,
+        total-stx-out: total-stx-out
+      })
+    )
+  )
+))
