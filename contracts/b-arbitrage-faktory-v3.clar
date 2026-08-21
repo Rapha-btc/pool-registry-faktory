@@ -51,7 +51,7 @@
       )
       (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
       (asserts! (> token-out token-in) ERR-NO-PROFIT)
-      (try! (pay-deployer token-out))
+      (try! (back-to-deployer token-out))
       (ok {
         token-in: token-in,
         token-out: token-out,
@@ -79,7 +79,7 @@
       )
       (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
       (asserts! (> token-out token-in) ERR-NO-PROFIT)
-      (try! (pay-deployer token-out))
+      (try! (back-to-deployer token-out))
       (ok {
         token-in: token-in,
         token-out: token-out,
@@ -109,7 +109,7 @@
       )
       (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
       (asserts! (> token-out token-in) ERR-NO-PROFIT)
-      (try! (pay-deployer token-out))
+      (try! (back-to-deployer token-out))
       (ok {
         token-in: token-in,
         token-out: token-out,
@@ -137,7 +137,7 @@
       )
       (asserts! (>= token-out min-token-out) ERR-SLIPPAGE)
       (asserts! (> token-out token-in) ERR-NO-PROFIT)
-      (try! (pay-deployer token-out))
+      (try! (back-to-deployer token-out))
       (ok {
         token-in: token-in,
         token-out: token-out,
@@ -146,9 +146,9 @@
   )
 )
 
-;; ---- payout ----
+;; ---- return profit to deployer (= keeper caller = chavita) ----
 
-(define-private (pay-deployer (amt uint))
+(define-private (back-to-deployer (amt uint))
   (as-contract? ((with-ft B B-ASSET amt))
     (try! (contract-call? B transfer amt current-contract DEPLOYER none))
   )
