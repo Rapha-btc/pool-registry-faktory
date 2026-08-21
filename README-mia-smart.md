@@ -238,16 +238,51 @@ available bin depth — which is exactly the intended safety behaviour. Before
 relying on a DLMM route in production, re-check which pool version is liquid
 (Bitflow is mid-migration across v-1/v-2/v-3).
 
-## 8. Remaining coverage gaps
+## 8. Property fuzzing (Rendezvous)
+
+`rendezvous-mia-smart/` is an `rv` harness. `contracts/mia-smart-faktory.clar`
+there is a **testable twin**: the deployed source with every mainnet principal
+rewritten to a local mock (`.mock-*`) and the principal constants inlined to
+literals. The inlining is required — simnet's static analyzer rejects a
+*constant* in a trait-arg position (the mainnet node accepts it, which is why the
+real contract deploys and the sims pass; a genuine clarinet-vs-node divergence).
+The venue mocks are compile-only stubs: the fuzzed guard reverts before any venue
+call, so their fidelity is irrelevant to these properties.
+
+```bash
+node <path>/rendezvous/dist/app.js rendezvous-mia-smart mia-smart-faktory test --runs=200
+```
+
+**Result: 200 runs, 0 failures** (2026-08-20). 160 property calls passed, 40
+discarded.
+
+| Property (fuzzed `amount`, `ratio`) | Asserts |
+|---|---|
+| `test-{buy,sell}-{sbtc,stx}-ratio-guard`, `test-buy-sbtc-dlmm-ratio-guard` | for any `ratio > 100`, the entry point returns **exactly** `ERR-INVALID-RATIO` (u1002) — never an arithmetic-overflow panic from `(* amount ratio)`, never a silent underflow |
+
+This is the exact bug class that once made `ERR-INVALID-RATIO` unreachable (§4);
+RV re-verifies the fix holds across huge fuzzed inputs (`amount ~2e9 x ratio ~2e9`).
+
+### Why not fuzz conservation here
+
+The router holds no state; its meaningful properties (conservation,
+*total-out ≥ best single venue*) depend on the venues actually moving tokens,
+with wrapped-STX semantics only the real contracts implement — so faithful mocks
+risk false results. Those properties are covered at higher fidelity by §7
+(`verify-mia-smart-coverage.js`) against the **real mainnet pools** on the stxer
+fork. A note on the tooling: RV *does* run against mainnet state via
+`[repl.remote_data]` (verified end to end through the `rv` CLI + Hiro API), but
+fuzzing swap functions needs the fuzzer's own simnet accounts holding the input
+tokens, which the fork can't provide — hence the mocks.
+
+## 9. Remaining coverage gaps
 
 - **Size sweep.** One amount per direction on the AMM legs. Slippage and the
   optimal-ratio maths are size-dependent, and dust-scale sells (31 sats on 100
   MIA) sit where integer truncation dominates.
-- **Property fuzzing (next).** No Rendezvous target yet. The invariant worth
-  writing first: *total-out is never worse than the better single-venue route* —
-  that is the entire premise of splitting, and nothing currently tests it. RV in
-  simnet needs the external venues mocked (the swap legs call mainnet pools that
-  simnet doesn't have), the same pattern used for the vault's testable twin.
+- **`ratio ≤ 100` panic fuzz.** The RV target could be extended with
+  `test-*-no-panic` for `ratio ≤ 100`, exercising the whole execution path
+  (with stub venues) for arithmetic panics beyond the guard.
 - **Adversarial pool.** No test with a hostile DEX callee. The allowances are
   what bound that blast radius, and the sabotaged-twin case is the closest
   proxy so far.
