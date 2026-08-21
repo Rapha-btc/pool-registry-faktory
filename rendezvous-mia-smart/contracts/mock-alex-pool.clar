@@ -1,0 +1,6 @@
+(use-trait ft-trait .sip-010-trait.sip-010-trait)
+(define-public (swap-x-for-y (tx <ft-trait>) (ty <ft-trait>) (factor uint) (dx uint) (min (optional uint))) (begin (asserts! true (err u0)) (ok {dx: u1, dy: u1})))
+(define-public (swap-y-for-x (tx <ft-trait>) (ty <ft-trait>) (factor uint) (dy uint) (min (optional uint))) (begin (asserts! true (err u0)) (ok {dx: u1, dy: u1})))
+(define-read-only (get-pool-details (tx principal) (ty principal) (factor uint)) (ok {balance-x: u1000000, balance-y: u1000000}))
+(define-read-only (get-y-given-x (tx principal) (ty principal) (factor uint) (dx uint)) (ok u1))
+(define-read-only (get-x-given-y (tx principal) (ty principal) (factor uint) (dy uint)) (ok u1))

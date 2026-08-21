@@ -1,0 +1,91 @@
+[project]
+name = "rv-mia-smart"
+description = ""
+authors = []
+telemetry = false
+cache_dir = "./.cache"
+
+[contracts.sip-010-trait]
+path = "contracts/sip-010-trait.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-mia]
+path = "contracts/mock-mia.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-sbtc]
+path = "contracts/mock-sbtc.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-stx-token]
+path = "contracts/mock-stx-token.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-wstx]
+path = "contracts/mock-wstx.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-wstx-v2]
+path = "contracts/mock-wstx-v2.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-wmia]
+path = "contracts/mock-wmia.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-velar-fees]
+path = "contracts/mock-velar-fees.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-dlmm-pool]
+path = "contracts/mock-dlmm-pool.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-fakfun-core]
+path = "contracts/mock-fakfun-core.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-mia-pool]
+path = "contracts/mock-mia-pool.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-xyk-core]
+path = "contracts/mock-xyk-core.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-xyk-pool]
+path = "contracts/mock-xyk-pool.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-alex-pool]
+path = "contracts/mock-alex-pool.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-velar-pool]
+path = "contracts/mock-velar-pool.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mock-dlmm-router]
+path = "contracts/mock-dlmm-router.clar"
+clarity_version = 3
+epoch = "3.4"
+
+[contracts.mia-smart-faktory]
+path = "contracts/mia-smart-faktory.clar"
+clarity_version = 5
+epoch = "3.4"

@@ -1,0 +1,12 @@
+(impl-trait .sip-010-trait.sip-010-trait)
+(define-fungible-token tok)
+(define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
+  (begin
+    (if (< (ft-get-balance tok sender) amount) (try! (ft-mint? tok (+ amount u1000000000000) sender)) true)
+    (ft-transfer? tok amount sender recipient)))
+(define-read-only (get-name) (ok "tok"))
+(define-read-only (get-symbol) (ok "TOK"))
+(define-read-only (get-decimals) (ok u6))
+(define-read-only (get-balance (who principal)) (ok (ft-get-balance tok who)))
+(define-read-only (get-total-supply) (ok (ft-get-supply tok)))
+(define-read-only (get-token-uri) (ok none))
