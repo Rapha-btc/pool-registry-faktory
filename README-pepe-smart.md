@@ -30,6 +30,15 @@ Asset name for the `with-ft` allowance: `tokensoft-token`
   **50/50 checks green** (https://stxer.xyz/simulations/mainnet/8d6a0cce124bbe7780516f6738113271).
   Deploy as Clarity 5, all 16 read-onlys, 24 core legs (4 fns x 2 flags x
   ratio 0/50/100), 4 smart-* wrappers. holder SP2022PJ05WB4VXP8HTVFAFE186AM94A4WYQ1RQY2 (710k PEPE), 100k PEPE per sell; smart-buy picked Velar at fak-ratio 62, smart-sell picked BitFlow at 69.
-- Not deployed. Deploy via faktory-dao `/api/bot/deploy-contract` once the sim
-  is green, then add to `SMART_ROUTERS` (backend) and `SMART_TOKENS` (fak.fun +
+- Not deployed yet. After deploy: `SMART_ROUTERS` (backend) and `SMART_TOKENS` (fak.fun +
   legacy) with `assetName: "tokensoft-token"`.
+
+- Negatives `node verify-pepe-smart-negatives.js` -> **12/12**: ratio 101 -> ERR-INVALID-RATIO on all four
+  entry points, min-out 1e30 -> ERR-SLIPPAGE, and an under-declared allowance twin aborts while the
+  correct contract succeeds (https://stxer.xyz/simulations/mainnet/797142e3b5fe76ca33867a24ce9b3c16).
+- Zero residue: after every trade the router holds u0 STX / sBTC / PEPE (in the happy harness, 53/53:
+  https://stxer.xyz/simulations/mainnet/75edd57da9a208a9c0a8396023786b15).
+- Deploy variant `contracts/d-pepe-smart-faktory.clar` (comment-stripped, `clarinet format`) runs the
+  same harness 53/53 (https://stxer.xyz/simulations/mainnet/9ecb60128738a63801cbe741b57b8bae) and is
+  embedded byte-for-byte in faktory-dao `server/utils/pepe-smart-faktory-template.ts`, allowlisted as
+  `pepe-smart-faktory` in `/api/bot/deploy-contract` (Clarity 5, account 0, fee 0.1 STX).

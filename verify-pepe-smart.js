@@ -40,7 +40,8 @@ const MIA_AMOUNT = 100000000n; // 100k PEPE (3dec); holder has 710k
 // both legs run and the allowances have to hold for each.
 const RATIOS = [0n, 50n, 100n];
 
-const src = fs.readFileSync("./contracts/pepe-smart-faktory.clar", "utf8");
+// SRC=./contracts/d-pepe-smart-faktory.clar node ... runs the comment-stripped deploy variant.
+const src = fs.readFileSync(process.env.SRC || "./contracts/pepe-smart-faktory.clar", "utf8");
 
 let checks = 0;
 let failures = 0;
@@ -160,6 +161,19 @@ b.withSender(MIA_HOLDER).addContractCall({
 });
 expectOk("smart-sell-for-stx");
 
+
+// --- zero residue: nothing may be left in the router after all of the above --
+// Every leg pays out exactly what it received; dust here means the fee shave
+// or a payout is wrong. STX is native; sBTC and the token are SIP-010 reads.
+for (const [label, code] of [
+  ["residue STX", "(stx-get-balance current-contract)"],
+  ["residue sBTC", "(contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token get-balance current-contract)"],
+  ["residue token", "(contract-call? 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz get-balance current-contract)"],
+]) {
+  b.addEvalCode(C, code);
+  steps.push({ label, kind: "residue" });
+}
+
 function decodeTx(s) {
   const r = s?.Result?.Transaction;
   if (!r) return "<no tx>";
@@ -200,6 +214,9 @@ steps.forEach((step, i) => {
   if (step.kind === "eval") {
     const v = decodeEval(s);
     assert(step.label, v, !String(v).startsWith("ERR") && v !== "<no eval>");
+  } else if (step.kind === "residue") {
+    const v = decodeEval(s);
+    assert(step.label, v, v === "u0" || v === "(ok u0)");
   } else {
     const v = decodeTx(s);
     // A leg is healthy when it returns (ok ...). Anything else - an (err ...),

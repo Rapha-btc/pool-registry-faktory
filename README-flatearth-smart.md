@@ -41,4 +41,13 @@ Done 2026-08-24: compiles, warnings identical in kind to mia-smart.
   **48/48 checks green** (https://stxer.xyz/simulations/mainnet/7ade75aacdb084809288d030c2b91173).
   Deploy as Clarity 5, read-onlys, 24 core legs (4 fns x 2 flags x ratio
   0/50/100), 4 smart-* wrappers. seller = deployer EOA SP3W69 (~31.5M FLAT), 20k FLAT per sell; fak pool holds only ~0.0106 sBTC so the split lands at fak-ratio 6-7 and Velar 0003 carries the rest.
-- Not deployed. Same rollout as PEPE afterwards.
+- Not deployed yet. Same rollout as PEPE afterwards (`assetName: "FlatEarth"`).
+
+- Negatives `node verify-flat-smart-negatives.js` -> **12/12** (ratio 101, min-out 1e30, allowance twin)
+  (https://stxer.xyz/simulations/mainnet/c465adac5e45e1658e914a57d8579abc).
+- Zero residue: u0 STX / sBTC / FLAT left in the router after every trade (happy harness 51/51:
+  https://stxer.xyz/simulations/mainnet/4fbbf389a12fc74b7ea27703b58eb400).
+- Deploy variant `contracts/d-flatearth-smart-faktory.clar` runs the same harness 51/51
+  (https://stxer.xyz/simulations/mainnet/450a5947bd7b48ccaa24190f928183e6) and is embedded byte-for-byte
+  in faktory-dao `server/utils/flatearth-smart-faktory-template.ts`, allowlisted as
+  `flatearth-smart-faktory` in `/api/bot/deploy-contract` (Clarity 5, account 0, fee 0.1 STX).
