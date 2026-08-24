@@ -58,3 +58,15 @@ or rescue functions, no state, and each call is atomic.
 Not covered: adversarial pool state (a venue returning less than its own quote
 is bounded by `min-out`, which the front end sets from the quote and slippage),
 and price impact at sizes far beyond what was simulated.
+
+## Front-end post-conditions (deny mode)
+
+`verify-smart-postconditions.mjs` builds the exact transactions the front ends
+submit (same post-condition list, `postConditionMode: Deny`) as raw unsigned
+txs and runs them on a fork: 4/4 clean
+(https://stxer.xyz/simulations/mainnet/2e3cc740de0d544bf0531711d00a1176).
+Lesson it caught: the router re-decides the bridge at execution time, so a list
+built from the front end's earlier `compare-*` read was stale by one block and
+aborted ("STX moved by univ2-pool-0070 but not checked"). Both bridge families
+are now always whitelisted (all `willSendGte(0)`); the amounts the user and the
+router are held to are unchanged.
