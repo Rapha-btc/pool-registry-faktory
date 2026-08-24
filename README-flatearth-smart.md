@@ -1,4 +1,7 @@
-# flatearth-smart-faktory (DRAFT, not deployed)
+# flatearth-smart-faktory
+
+**Status: DEPLOYED 2026-08-24** at `SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.flatearth-smart-faktory`
+(txid `7749a6818dd50dedad2b746041d4f9bc1827cfb5d8426e2fedc457935ebc9873`), via faktory-dao `/api/bot/deploy-contract`. On-chain bytes = `contracts/d-flatearth-smart-faktory.clar`.
 
 Split-router for FlatEarth (FLAT, 6 dec), modeled on the deployed
 `mia-smart-faktory`. Same public interface as `b-smart` / `mia-smart`, so the
@@ -41,7 +44,7 @@ Done 2026-08-24: compiles, warnings identical in kind to mia-smart.
   **48/48 checks green** (https://stxer.xyz/simulations/mainnet/7ade75aacdb084809288d030c2b91173).
   Deploy as Clarity 5, read-onlys, 24 core legs (4 fns x 2 flags x ratio
   0/50/100), 4 smart-* wrappers. seller = deployer EOA SP3W69 (~31.5M FLAT), 20k FLAT per sell; fak pool holds only ~0.0106 sBTC so the split lands at fak-ratio 6-7 and Velar 0003 carries the rest.
-- Not deployed yet. Same rollout as PEPE afterwards (`assetName: "FlatEarth"`).
+- Deployed (see top). Same rollout as PEPE (`assetName: "FlatEarth"`).
 
 - Negatives `node verify-flat-smart-negatives.js` -> **12/12** (ratio 101, min-out 1e30, allowance twin)
   (https://stxer.xyz/simulations/mainnet/c465adac5e45e1658e914a57d8579abc).
@@ -51,3 +54,16 @@ Done 2026-08-24: compiles, warnings identical in kind to mia-smart.
   (https://stxer.xyz/simulations/mainnet/450a5947bd7b48ccaa24190f928183e6) and is embedded byte-for-byte
   in faktory-dao `server/utils/flatearth-smart-faktory-template.ts`, allowlisted as
   `flatearth-smart-faktory` in `/api/bot/deploy-contract` (Clarity 5, account 0, fee 0.1 STX).
+
+## What the sims prove, and what they do not
+
+Every path executes under the Clarity 5 `as-contract?` allowances; the
+allowances are load-bearing (a twin declared one unit short aborts while the
+correct contract succeeds); bad inputs are rejected with the intended errors
+(ERR-INVALID-RATIO u1002, ERR-SLIPPAGE u1000); and the router never holds a
+residue, so a leg cannot silently under-pay or strand funds. There are no admin
+or rescue functions, no state, and each call is atomic.
+
+Not covered: adversarial pool state (a venue returning less than its own quote
+is bounded by `min-out`, which the front end sets from the quote and slippage),
+and price impact at sizes far beyond what was simulated.
