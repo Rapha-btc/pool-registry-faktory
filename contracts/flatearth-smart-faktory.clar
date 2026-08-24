@@ -21,10 +21,6 @@
 (define-constant ERR-INVALID-RATIO (err u1002))
 (define-constant ERR-PARTIAL-FILL (err u1003))
 
-;; Clarity 4+ rejects as-contract inside define-constant; current-contract is
-;; the keyword that replaces the old (as-contract tx-sender) idiom.
-(define-constant CONTRACT current-contract)
-
 ;; Principals used more than once. Named so a wrong address is a compile error
 ;; in one place rather than a typo buried in the tenth call site. Read-only
 ;; simulate-* helpers keep their literals: those are quotes, not value moves.
@@ -72,7 +68,7 @@
       transfer
       sbtc-amount
       tx-sender
-      CONTRACT
+      current-contract
       none
     ))
 
@@ -96,7 +92,7 @@
       (asserts! (>= total-token-out min-token-out) ERR-SLIPPAGE)
 
       (try! (as-contract? ((with-ft TOKEN TOKEN-ASSET total-token-out))
-        (try! (contract-call? TOKEN transfer total-token-out CONTRACT sender none))
+        (try! (contract-call? TOKEN transfer total-token-out current-contract sender none))
       ))
 
       (print {
@@ -108,7 +104,7 @@
         amount-out: total-token-out,
         token-from-fak: token-from-fak,
         token-from-dex: token-from-alex,
-        pool-contract: CONTRACT,
+        pool-contract: current-contract,
         min-y-out: min-token-out })
       (ok {
         sbtc-amount: sbtc-amount,
@@ -136,7 +132,7 @@
     (fak-amount (- stx-amount alex-amount))
     )
 
-    (try! (stx-transfer? stx-amount tx-sender CONTRACT))
+    (try! (stx-transfer? stx-amount tx-sender current-contract))
 
     (let (
       (sender tx-sender)
@@ -158,7 +154,7 @@
       (asserts! (>= total-token-out min-token-out) ERR-SLIPPAGE)
 
       (try! (as-contract? ((with-ft TOKEN TOKEN-ASSET total-token-out))
-        (try! (contract-call? TOKEN transfer total-token-out CONTRACT sender none))
+        (try! (contract-call? TOKEN transfer total-token-out current-contract sender none))
       ))
         (print {
         type: "buy",
@@ -169,7 +165,7 @@
         amount-out: total-token-out,
         token-from-alex: token-from-alex,
         token-from-dex: token-from-fak,
-        pool-contract: CONTRACT,
+        pool-contract: current-contract,
         min-y-out: min-token-out
         })
       (ok {
@@ -203,7 +199,7 @@
       transfer
       token-amount
       tx-sender
-      CONTRACT
+      current-contract
       none
     ))
 
@@ -227,7 +223,7 @@
       (asserts! (>= total-sbtc-out min-sbtc-out) ERR-SLIPPAGE)
 
       (try! (as-contract? ((with-ft SBTC SBTC-ASSET total-sbtc-out))
-        (try! (contract-call? SBTC transfer total-sbtc-out CONTRACT sender none))
+        (try! (contract-call? SBTC transfer total-sbtc-out current-contract sender none))
       ))
       (print {
         type: "sell",
@@ -238,7 +234,7 @@
         amount-out: total-sbtc-out,
         sbtc-from-fak: sbtc-from-fak,
         sbtc-from-dex: sbtc-from-dex,
-        pool-contract: CONTRACT,
+        pool-contract: current-contract,
         min-y-out: min-sbtc-out
       })
       (ok {
@@ -272,7 +268,7 @@
       transfer
       token-amount
       tx-sender
-      CONTRACT
+      current-contract
       none
     ))
 
@@ -296,7 +292,7 @@
       (asserts! (>= total-stx-out min-stx-out) ERR-SLIPPAGE)
 
       (try! (as-contract? ((with-stx total-stx-out))
-        (try! (stx-transfer? total-stx-out CONTRACT sender))
+        (try! (stx-transfer? total-stx-out current-contract sender))
       ))
       (print {
         type: "sell",
@@ -307,7 +303,7 @@
         amount-out: total-stx-out,
         stx-from-alex: stx-from-alex,
         stx-from-dex: stx-from-dex,
-        pool-contract: CONTRACT,
+        pool-contract: current-contract,
         min-y-out: min-stx-out
       })
       (ok {
