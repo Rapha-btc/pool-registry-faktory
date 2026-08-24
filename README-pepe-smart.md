@@ -26,10 +26,10 @@ Asset name for the `with-ft` allowance: `tokensoft-token`
 
 - `clarinet check`: compiles (2026-08-24). Warnings are the `unwrap-panic`
   quotes, same as mia-smart.
-- Not simulated yet. Next: a `verify-pepe-smart.js` on the mia pattern
-  (`verify-mia-smart.js`): fork mainnet, deploy, fund a sender with PEPE via
-  `ft-transfer?`, run buy/sell at ratio 0 / 50 / 100 for both flags, assert
-  `estimate-*` == executed output and that every allowance holds.
+- stxer mainnet fork, 2026-08-24, block 8833457: `node verify-pepe-smart.js` ->
+  **50/50 checks green** (https://stxer.xyz/simulations/mainnet/e4204738c5a541d39796d7709530ae57).
+  Deploy as Clarity 5, all 16 read-onlys, 24 core legs (4 fns x 2 flags x
+  ratio 0/50/100), 4 smart-* wrappers. holder SP2022PJ05WB4VXP8HTVFAFE186AM94A4WYQ1RQY2 (710k PEPE), 100k PEPE per sell; smart-buy picked Velar at fak-ratio 62, smart-sell picked BitFlow at 69.
 - Not deployed. Deploy via faktory-dao `/api/bot/deploy-contract` once the sim
   is green, then add to `SMART_ROUTERS` (backend) and `SMART_TOKENS` (fak.fun +
   legacy) with `assetName: "tokensoft-token"`.

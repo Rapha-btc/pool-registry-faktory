@@ -37,7 +37,8 @@ Done 2026-08-24: compiles, warnings identical in kind to mia-smart.
 
 ## Status
 
-- Not simulated. Next: `verify-flat-smart.js` on the `simul-flatearth-arb-v2.js`
-  pattern (stxer 0.8.0, fund the sender with FLAT from `SP3W69…` via
-  `ft-transfer?` - FLAT is at max supply, cannot mint).
+- stxer mainnet fork, 2026-08-24, block 8833457: `node verify-flat-smart.js` ->
+  **48/48 checks green** (https://stxer.xyz/simulations/mainnet/592e620bfffbf69ac3a97b55af8cca31).
+  Deploy as Clarity 5, read-onlys, 24 core legs (4 fns x 2 flags x ratio
+  0/50/100), 4 smart-* wrappers. seller = deployer EOA SP3W69 (~31.5M FLAT), 20k FLAT per sell; fak pool holds only ~0.0106 sBTC so the split lands at fak-ratio 6-7 and Velar 0003 carries the rest.
 - Not deployed. Same rollout as PEPE afterwards.
