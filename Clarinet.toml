@@ -61,6 +61,41 @@ contract_id = 'SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-fees-v1_0_0-0070'
 [[project.requirements]]
 contract_id = 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.wstx'
 
+# Dependencies of pepe-smart-faktory / flatearth-smart-faktory (DRAFTS).
+
+[[project.requirements]]
+contract_id = 'SP1Z92MPDQEWZXW36VX71Q25HKF5K2EPCJ304F275.tokensoft-token-v4k68639zxz'
+
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.pepe-faktory-pool-v2-2'
+
+[[project.requirements]]
+contract_id = 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-pepe-stx-v-1-1'
+
+[[project.requirements]]
+contract_id = 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-router'
+
+[[project.requirements]]
+contract_id = 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core'
+
+[[project.requirements]]
+contract_id = 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-share-fee-to'
+
+[[project.requirements]]
+contract_id = 'SP3W69VDG9VTZNG7NTW1QNCC1W45SNY98W1JSZBJH.flat-earth-stxcity-dex'
+
+[[project.requirements]]
+contract_id = 'SP3W69VDG9VTZNG7NTW1QNCC1W45SNY98W1JSZBJH.flat-earth-stxcity'
+
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.flatearth-faktory-pool-v2'
+
+[[project.requirements]]
+contract_id = 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-pool-v1_0_0-0003'
+
+[[project.requirements]]
+contract_id = 'SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-fees-v1_0_0-0003'
+
 [contracts.faktory-pool-registry]
 path = 'contracts/faktory-pool-registry.clar'
 clarity_version = 3
@@ -100,3 +135,16 @@ callee_filter = false
 [repl.remote_data]
 enabled = false
 api_url = 'https://api.hiro.so'
+
+[contracts.pepe-smart-faktory]
+path = 'contracts/pepe-smart-faktory.clar'
+clarity_version = 5
+epoch = 'latest'
+
+# flatearth-smart-faktory is deliberately NOT in the manifest: flat-earth-stxcity
+# and flat-earth-stxcity-dex reference each other, so clarinet cannot order the
+# FLAT token and everything downstream (the fak pool) reports as unresolved -
+# the same reason the flatearth-arbitrage contracts are validated with stxer
+# (simul-flatearth-arb-v2.js) instead. To type-check the router, copy it with
+# the PEPE token/pool principals substituted (identical interfaces) and check
+# that; see README-flatearth-smart.md.
