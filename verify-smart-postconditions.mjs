@@ -1,6 +1,6 @@
 // verify-smart-postconditions.mjs
 // Proves the front ends' post-condition lists are COMPLETE for the deployed
-// pepe-smart-faktory and flatearth-smart-faktory routers. The FE submits
+// pepe-smart-faktory, flatearth-smart-faktory and fakfun-smart-faktory routers. The FE submits
 // smart buys with postConditionMode Deny, so any asset sender missing from the
 // list aborts the tx. This builds the same txs the FE builds (same PCs, Deny)
 // as raw unsigned transactions and runs them on a mainnet fork.
@@ -18,6 +18,8 @@ const VELAR_POOL = "SP20X3DC5R091J8B6YPQT638J8NR1W83KN6TN5BJY.univ2-pool-v1_0_0-
 const BITFLOW_PEPE_POOL = "SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-pepe-stx-v-1-1";
 const VELAR_CORE = "SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core";
 const VELAR_FLAT_POOL = "SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-pool-v1_0_0-0003";
+const BITFLOW_FAKFUN_POOL = "SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-fakfun-stx-v-1-1";
+const CHARISMA_FAKFUN_POOL = "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.sbtc-fakfun-amm-lp-v1";
 const SBTC_HOLDER = "SP2C7BCAP2NH3EYWCCVHJ6K0DMZBXDFKQ56KR7QN2";
 const STX_HOLDER = "SP9BP4PN74CNR5XT7CMAMBPA0GWC9HMB69HVVV51";
 const HIRO = "https://api.hiro.so";
@@ -33,6 +35,13 @@ const TOKENS = {
     router: `${D}.flatearth-smart-faktory`, fakPool: `${D}.flatearth-faktory-pool-v2`,
     token: "SP3W69VDG9VTZNG7NTW1QNCC1W45SNY98W1JSZBJH.flat-earth-stxcity", asset: "FlatEarth",
     dexSenders: { bitflow: [{ principal: VELAR_FLAT_POOL, token: true, ustx: true }], velar: [{ principal: VELAR_FLAT_POOL, token: true, ustx: true }] },
+  },
+  // fakfun-smart-faktory: fak leg = Charisma pool via fakfun-core-v2 execute;
+  // token leg = bitflow xyk-pool-fakfun-stx (pays FAKFUN) on either flag.
+  FAKFUN: {
+    router: `${D}.fakfun-smart-faktory`, fakPool: CHARISMA_FAKFUN_POOL,
+    token: `${D}.fakfun-faktory`, asset: "FAKFUN",
+    dexSenders: { bitflow: [{ principal: BITFLOW_FAKFUN_POOL, token: true }], velar: [{ principal: BITFLOW_FAKFUN_POOL, token: true }] },
   },
 };
 
@@ -96,7 +105,9 @@ console.log("View: https://stxer.xyz/simulations/mainnet/" + sid + "\n");
 const labels = [];
 const txs = [];
 const nonces = { [SBTC_HOLDER]: await nonceOf(SBTC_HOLDER), [STX_HOLDER]: await nonceOf(STX_HOLDER) };
+const ONLY = process.env.ONLY ? process.env.ONLY.split(",") : null;
 for (const [sym, c] of Object.entries(TOKENS)) {
+  if (ONLY && !ONLY.includes(sym)) continue;
   const sats = 100000, micro = 100000000;
   const rS = await readOnly(c.router, "compare-sbtc-to-token-routes", [uintCV(sats)], SBTC_HOLDER);
   const rT = await readOnly(c.router, "compare-stx-to-token-routes", [uintCV(micro)], STX_HOLDER);
