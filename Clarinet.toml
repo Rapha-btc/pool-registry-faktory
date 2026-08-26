@@ -119,6 +119,11 @@ path = 'contracts/mia-smart-faktory.clar'
 clarity_version = 5
 epoch = 'latest'
 
+[contracts.fakfun-smart-faktory]
+path = 'contracts/fakfun-smart-faktory.clar'
+clarity_version = 5
+epoch = 'latest'
+
 [contracts.prelaunch-faktory-trait]
 path = 'contracts/prelaunch-faktory-trait.clar'
 clarity_version = 3
