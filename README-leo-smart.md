@@ -1,7 +1,7 @@
 # leo-smart-faktory
 
-**Status: READY TO DEPLOY (not yet on-chain)** as `SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.leo-smart-faktory`,
-via faktory-dao `/api/bot/deploy-contract` (allowlisted, Clarity 5, account 0, fee 0.1 STX).
+**Status: DEPLOYED 2026-08-26** as `SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.leo-smart-faktory`
+(tx d106992684bbabd7b2de78e74c2f2484f393b2218219e664ef7dd6a321953226, Clarity 5, account 0).
 On-chain bytes will be `contracts/d-leo-smart-faktory.clar`.
 
 Split-router for LEO (6 dec, `SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token`, asset `leo`),
@@ -59,3 +59,14 @@ manual ratio extremes can beat the `smart-*` pick until the venues converge - sa
 heuristic as the other routers, not a bug in this contract.
 
 After deploy: add to backend `SMART_ROUTERS` + FE smart config (assetName `leo`, 6 dec).
+
+## Deny-mode post-conditions (FE integration)
+
+`ONLY=LEO node verify-smart-postconditions.mjs` -> **2/2 clean**
+https://stxer.xyz/simulations/mainnet/2959008e0a69be9c6d3f6d1f41d5dc8f
+
+The 2-hop ALEX leg moves the intermediate `alex` token vault -> router -> vault inside
+the call, so besides the vault paying LEO, BOTH the vault and the router need a
+`token-alex::alex` willSendGte(0) entry; without them a Deny-mode buy aborts with
+"alex was moved by leo-smart-faktory but not checked" (first run 0/2). Wired as the
+`ft` field on DexSender in faktory-dao PoolTradingPanel and legacy smartRouting.ts.

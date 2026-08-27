@@ -20,6 +20,8 @@ const VELAR_CORE = "SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-core";
 const VELAR_FLAT_POOL = "SP1Y5YSTAHZ88XYK1VPDH24GY0HPX5J4JECTMY4A1.univ2-pool-v1_0_0-0003";
 const BITFLOW_FAKFUN_POOL = "SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-fakfun-stx-v-1-1";
 const CHARISMA_FAKFUN_POOL = "SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.sbtc-fakfun-amm-lp-v1";
+const ALEX_VAULT = "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.amm-vault-v2-01";
+const ALEX_FT = { contract: "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-alex", asset: "alex" };
 const SBTC_HOLDER = "SP2C7BCAP2NH3EYWCCVHJ6K0DMZBXDFKQ56KR7QN2";
 const STX_HOLDER = "SP9BP4PN74CNR5XT7CMAMBPA0GWC9HMB69HVVV51";
 const HIRO = "https://api.hiro.so";
@@ -43,6 +45,17 @@ const TOKENS = {
     token: `${D}.fakfun-faktory`, asset: "FAKFUN",
     dexSenders: { bitflow: [{ principal: BITFLOW_FAKFUN_POOL, token: true }], velar: [{ principal: BITFLOW_FAKFUN_POOL, token: true }] },
   },
+  // leo-smart-faktory: fak leg = leo-faktory-pool-v2 via fakfun-core-v2 execute;
+  // token leg = ALEX 2-hop, the LEO sender is the ALEX vault (same as B / MIA).
+  LEO: {
+    router: `${D}.leo-smart-faktory`, fakPool: `${D}.leo-faktory-pool-v2`,
+    token: "SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token", asset: "leo",
+    // 2-hop: the intermediate `alex` moves vault -> router -> vault, so both need an alex entry.
+    dexSenders: {
+      bitflow: [{ principal: ALEX_VAULT, token: true, ft: ALEX_FT }, { principal: `${D}.leo-smart-faktory`, ft: ALEX_FT }],
+      velar: [{ principal: ALEX_VAULT, token: true, ft: ALEX_FT }, { principal: `${D}.leo-smart-faktory`, ft: ALEX_FT }],
+    },
+  },
 };
 
 // Both families, always: the router re-decides the bridge at execution time,
@@ -50,6 +63,7 @@ const TOKENS = {
 const dexPcs = (c, _route) => [...c.dexSenders.bitflow, ...c.dexSenders.velar].flatMap((d) => [
   ...(d.token ? [Pc.principal(d.principal).willSendGte(0).ft(c.token, c.asset)] : []),
   ...(d.ustx ? [Pc.principal(d.principal).willSendGte(0).ustx()] : []),
+  ...(d.ft ? [Pc.principal(d.principal).willSendGte(0).ft(d.ft.contract, d.ft.asset)] : []),
 ]);
 const sbtcPcs = (c, user, sats, minOut, route) => [
   Pc.principal(user).willSendEq(sats).ft(SBTC, "sbtc-token"),

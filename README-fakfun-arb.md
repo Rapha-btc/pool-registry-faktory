@@ -1,7 +1,9 @@
 # fakfun-arbitrage-faktory
 
-**Status: READY TO DEPLOY (not yet on-chain)** as `SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-arbitrage-faktory`,
-via faktory-dao `/api/bot/deploy-contract` (allowlisted, Clarity 5, account 0, fee 0.1 STX).
+**Status: DEPLOYED 2026-08-26** as `SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-arbitrage-faktory`
+(tx d1143887289d1bf99a393b6d323cfd99b1bfac2a98821550d8e1a97eef2631d6, Clarity 5, account 0).
+Keeper: faktory-be `/api/bot/check-arb-opportunities` (every 30 min, chavita executes the best
+route above 200 FAKFUN profit; commit f71503d).
 On-chain bytes will be `contracts/d-fakfun-arbitrage-faktory.clar`.
 
 Atomic triangular arb for FAKFUN (8 dec, `SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.fakfun-faktory`,
