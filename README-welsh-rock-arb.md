@@ -2,8 +2,10 @@
 
 **Status: DRAFTS 2026-08-28, not deployed, NOT committed** (per Rapha). Files:
 `contracts/welsh-arb-faktory.clar`, `contracts/rock-arb-faktory.clar`, harness `verify-arb.js`,
-Clarinet.toml entries (Clarity 3, like `leo-arbitrage-faktory-v2` they derive from - `as-contract`
-inside `define-constant` is illegal from Clarity 4 on).
+Clarinet.toml entries. **Clarity 5** (2026-08-28 rework at Rapha's request): every leg runs under
+`as-contract?` with an explicit `with-ft` / `with-stx` allowance (pepe-smart pattern), the ALEX
+legs add the `alex` / `wstx` / `wcorgi` pass-through allowances, payouts and rescues use
+`current-contract` - the `(define-constant CONTRACT (as-contract tx-sender))` of the LEO arb is gone.
 
 Both are profit-or-revert triangular arbs TOKEN -> sBTC -> STX -> TOKEN (and reverse), profits paid
 to DEPLOYER, `rescue-*` for the deployer. Executor must hold the token (same as flatearth-arb).
@@ -28,6 +30,8 @@ ERR-NO-PROFIT at 100k WELSH (no edge on the fork), zero residue.
 
 Re-run 2026-08-28 (fresh fork): **29/29** https://stxer.xyz/simulations/mainnet/7d6d940b7cdf20bbb868382da0e13dbf
 
+Clarity 5 rework, 2026-08-28: **29/29** https://stxer.xyz/simulations/mainnet/66db2f321d53d7e69cc9a94f9e4cf4b1
+
 ### Imbalance proof (`node verify-welsh-arb-imbalance.js`): **30/30**
 https://stxer.xyz/simulations/mainnet/b6a6c6ad1cdf010435f78cb4dae50926 (block 8861562)
 
@@ -41,6 +45,9 @@ https://stxer.xyz/simulations/mainnet/b6a6c6ad1cdf010435f78cb4dae50926 (block 88
    `(err u1001)` because the first three already closed the gap. All 4 reverse routes revert
    u1001. Zero residue. So the contract fires when an edge exists and refuses atomically once
    it is gone.
+
+   Clarity 5 rework re-run: **30/30** https://stxer.xyz/simulations/mainnet/a1012859df4c3070d07cf6f57e55b372
+   (arb-fak-bit-bit 100k -> 172.2k, then 137.1k, 115.2k, then u1001).
 
 ## rock-arb-faktory (4 routes)
 
@@ -58,6 +65,9 @@ https://stxer.xyz/simulations/mainnet/9875999cd27a8d7027265117c9c429f8, same res
 fak-first routes were PROFITABLE on the fork: `arb-fak-bit-vel` 10.00M -> 10.68M ROCK (+6.8%),
 `arb-fak-vel-vel` 10.00M -> 10.12M. ROCK trades ~11% richer on the fak pool (0.000178 sat) than on
 Velar 18 (0.00016 sat); both pools are thin so the edge closes fast. Reverse routes revert u1001.
+
+Clarity 5 rework, 2026-08-28: **17/17** https://stxer.xyz/simulations/mainnet/396c2383514b9ffc8bced840c394d723
+(`arb-fak-bit-vel` 10.00M -> 10.68M ROCK still profitable).
 
 ## Next (after review)
 
