@@ -167,3 +167,38 @@ contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.lwb-faktory-pool'
 
 [[project.requirements]]
 contract_id = 'SP277HZA8AGXV42MZKDW5B2NNN61RHQ42MTAHVNB1.xyk-pool-stx-lwb-v-1-1'
+
+# Dependencies of welsh-smart-faktory (DRAFT): WELSH token, fak pool v2, bitflow
+# welsh-stx xyk pool, ALEX alex + wcorgi tokens (amm-pool-v2-01 / wstx-v2 already above).
+[contracts.welsh-smart-faktory]
+path = 'contracts/welsh-smart-faktory.clar'
+clarity_version = 5
+epoch = 'latest'
+
+# rock-smart-faktory (DRAFT): fak pool rock-faktory-pool-2 + Velar old-core pool 18
+# via univ2-router (router/core/share-fee-to already above).
+[contracts.rock-smart-faktory]
+path = 'contracts/rock-smart-faktory.clar'
+clarity_version = 5
+epoch = 'latest'
+
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.welshcorgicoin-faktory-pool-v2'
+
+[[project.requirements]]
+contract_id = 'SP4M2C88EE8RQZPYTC4PZ88CE16YGP825EYF6KBQ.stacks-rock'
+
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.rock-faktory-pool-2'
+
+[[project.requirements]]
+contract_id = 'SP3NE50GEXFG9SZGTT51P40X2CKYSZ5CC4ZTZ7A2G.welshcorgicoin-token'
+
+[[project.requirements]]
+contract_id = 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-pool-welsh-stx-v-1-1'
+
+[[project.requirements]]
+contract_id = 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-alex'
+
+[[project.requirements]]
+contract_id = 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wcorgi'
