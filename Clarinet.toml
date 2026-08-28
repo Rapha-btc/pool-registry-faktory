@@ -153,3 +153,17 @@ epoch = 'latest'
 # (simul-flatearth-arb-v2.js) instead. To type-check the router, copy it with
 # the PEPE token/pool principals substituted (identical interfaces) and check
 # that; see README-flatearth-smart.md.
+
+[contracts.lwb-smart-faktory]
+path = 'contracts/lwb-smart-faktory.clar'
+clarity_version = 5
+epoch = 'latest'
+
+[[project.requirements]]
+contract_id = 'SP277HZA8AGXV42MZKDW5B2NNN61RHQ42MTAHVNB1.little-whiny-bitch-stxcity'
+
+[[project.requirements]]
+contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.lwb-faktory-pool'
+
+[[project.requirements]]
+contract_id = 'SP277HZA8AGXV42MZKDW5B2NNN61RHQ42MTAHVNB1.xyk-pool-stx-lwb-v-1-1'
