@@ -46,8 +46,8 @@ STX `SP9BP4PN74CNR5XT7CMAMBPA0GWC9HMB69HVVV51`, WELSH `SP3AP6DRSQ6P4FETB5M33D082
 
 - 2026-08-28, final source (fak + BitFlow/ALEX): **55/55 green**
   https://stxer.xyz/simulations/mainnet/da4dd815cec05759f865ca9ee7cbf763
-- 2026-08-28, deploy variant `d-welsh-smart-faktory.clar`, block 8861373: see the
-  `verify-welsh-smart.js` run recorded in the commit message / template header.
+- 2026-08-28, deploy variant `d-welsh-smart-faktory.clar`, block 8861381: **55/55 green**
+  https://stxer.xyz/simulations/mainnet/d633b4a20fdcd0e5caf2b3f427a72d09
 
 Earlier drafts without the fak leg (both legs STX venues) ran 53/53 three times
 (c383eb70…, 9d2c4628…, ebfb244c…); superseded once the v2 fak pool was wired.
