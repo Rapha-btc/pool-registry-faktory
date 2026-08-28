@@ -1,6 +1,23 @@
 # welsh-arb-faktory / rock-arb-faktory
 
-**Status: DRAFTS 2026-08-28, not deployed, NOT committed** (per Rapha). Files:
+**Status: READY TO DEPLOY 2026-08-28.** Deploy variants `contracts/d-welsh-arb-faktory.clar`
+(29/29 https://stxer.xyz/simulations/mainnet/5bdb778ce90415839baa04cfabc90777) and
+`contracts/d-rock-arb-faktory.clar` (17/17 https://stxer.xyz/simulations/mainnet/cf40ebda2502d5094d1b26572a6339fc),
+embedded byte-for-byte in faktory-dao `backend/server/utils/{welsh,rock}-arb-faktory-template.ts`
+and allowlisted in `/api/bot/deploy-contract` (Clarity 5, account 0, fee 0.1 STX):
+
+```
+curl -X POST https://faktory-dao-backend.vercel.app/api/bot/deploy-contract \
+  -H "Authorization: Bearer $CRON_SECRET" -H "Content-Type: application/json" \
+  -d '{"contractName":"welsh-arb-faktory"}'
+
+curl -X POST https://faktory-dao-backend.vercel.app/api/bot/deploy-contract \
+  -H "Authorization: Bearer $CRON_SECRET" -H "Content-Type: application/json" \
+  -d '{"contractName":"rock-arb-faktory"}'
+```
+
+Profits go to DEPLOYER (account 0), so that account must hold WELSH / ROCK to run a route.
+Files:
 `contracts/welsh-arb-faktory.clar`, `contracts/rock-arb-faktory.clar`, harness `verify-arb.js`,
 Clarinet.toml entries. **Clarity 5** (2026-08-28 rework at Rapha's request): every leg runs under
 `as-contract?` with an explicit `with-ft` / `with-stx` allowance (pepe-smart pattern), the ALEX
@@ -69,7 +86,7 @@ Velar 18 (0.00016 sat); both pools are thin so the edge closes fast. Reverse rou
 Clarity 5 rework, 2026-08-28: **17/17** https://stxer.xyz/simulations/mainnet/396c2383514b9ffc8bced840c394d723
 (`arb-fak-bit-vel` 10.00M -> 10.68M ROCK still profitable).
 
-## Next (after review)
+## Next
 
-Commit when Rapha says so; keeper wiring as flatearth-arb (faktory-be keeper, executor holds the
+Keeper wiring as flatearth-arb (faktory-be keeper, executor holds the
 token); `d-` variants + faktory-dao templates if they go to mainnet.

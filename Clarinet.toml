@@ -191,6 +191,18 @@ contract_id = 'SP4M2C88EE8RQZPYTC4PZ88CE16YGP825EYF6KBQ.stacks-rock'
 [[project.requirements]]
 contract_id = 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.rock-faktory-pool-2'
 
+# welsh-arb-faktory / rock-arb-faktory (DRAFTS, uncommitted): Clarity 5,
+# as-contract? allowances + current-contract.
+[contracts.welsh-arb-faktory]
+path = 'contracts/welsh-arb-faktory.clar'
+clarity_version = 5
+epoch = 'latest'
+
+[contracts.rock-arb-faktory]
+path = 'contracts/rock-arb-faktory.clar'
+clarity_version = 5
+epoch = 'latest'
+
 [[project.requirements]]
 contract_id = 'SP3NE50GEXFG9SZGTT51P40X2CKYSZ5CC4ZTZ7A2G.welshcorgicoin-token'
 
