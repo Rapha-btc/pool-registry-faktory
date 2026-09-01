@@ -214,3 +214,46 @@ contract_id = 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-alex'
 
 [[project.requirements]]
 contract_id = 'SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.token-wcorgi'
+
+# ROCK relaunch (DRAFTS, uncommitted): gated pool (mia-pool-faktory pattern)
+# + pepe-style single-sided against it. Clarity 6, epoch 4.0.
+[contracts.rock-faktory-pool-3]
+path = 'contracts/rock-faktory-pool-3.clar'
+clarity_version = 6
+epoch = '4.0'
+
+[contracts.rock-single-faktory]
+path = 'contracts/rock-single-faktory.clar'
+clarity_version = 6
+epoch = '4.0'
+
+[contracts.rock-arb-faktory-2]
+path = 'contracts/rock-arb-faktory-2.clar'
+clarity_version = 5
+epoch = "4.0"
+
+[contracts.rock-smart-faktory-2]
+path = 'contracts/rock-smart-faktory-2.clar'
+clarity_version = 5
+epoch = "4.0"
+
+# comment-stripped deploy variants (what actually ships via /api/bot/deploy-contract)
+[contracts.d-rock-faktory-pool-3]
+path = 'contracts/d-rock-faktory-pool-3.clar'
+clarity_version = 6
+epoch = "4.0"
+
+[contracts.d-rock-single-faktory]
+path = 'contracts/d-rock-single-faktory.clar'
+clarity_version = 6
+epoch = "4.0"
+
+[contracts.d-rock-smart-faktory-2]
+path = 'contracts/d-rock-smart-faktory-2.clar'
+clarity_version = 5
+epoch = "4.0"
+
+[contracts.d-rock-arb-faktory-2]
+path = 'contracts/d-rock-arb-faktory-2.clar'
+clarity_version = 5
+epoch = "4.0"
