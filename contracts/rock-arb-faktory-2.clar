@@ -181,7 +181,7 @@
 (define-private (swap-token-to-sbtc (amount uint))
   (let (
       (result (try! (contract-call?
-        'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.rock-faktory-pool-2 execute
+        .rock-faktory-pool-3 execute
         amount (some 0x01)
       )))
       (raw-dy (get dy result))
@@ -191,7 +191,7 @@
 )
 
 (define-private (swap-sbtc-to-token (sbtc-amount uint))
-  (let ((result (try! (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.rock-faktory-pool-2
+  (let ((result (try! (contract-call? .rock-faktory-pool-3
       execute sbtc-amount (some 0x00)
     ))))
     (ok (get dy result))
@@ -357,7 +357,7 @@
 )
 
 (define-read-only (simulate-token-to-sbtc (amount uint))
-  (let ((q (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.rock-faktory-pool-2
+  (let ((q (contract-call? .rock-faktory-pool-3
       get-swap-quote amount (some 0x01)
     )))
     (- (get dy q) (get fee q))
@@ -366,7 +366,7 @@
 
 (define-read-only (simulate-sbtc-to-token (sbtc-amount uint))
   (get dy
-    (unwrap-panic (contract-call? 'SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22.rock-faktory-pool-2
+    (unwrap-panic (contract-call? .rock-faktory-pool-3
       quote sbtc-amount (some 0x00)
     ))
   )
