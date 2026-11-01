@@ -85,23 +85,21 @@
 
 (define-public (sell-pool (pool <xyk-pool-trait>) (stx-token <bf-sip-010-trait>) (token <bf-sip-010-trait>)
                           (tokens-in uint) (min-stx-out uint))
-  (begin
+  (let (
+      ;; 1. sell the tokens on Bitflow (u1: Bitflow needs a min above zero)
+      (stx-out (try! (contract-call? 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2
+                       swap-y-for-x pool stx-token token tokens-in u1)))
+      ;; 2. our fee on the STX that came out
+      (fee (fee-of stx-out))
+      (net (- stx-out fee))
+    )
     (asserts! (is-approved (contract-of pool)) ERR_NOT_APPROVED)
-    (asserts! (> tokens-in u0) ERR_ZERO_AMOUNT)
-    (let (
-        ;; core needs min-dx > 0: the gross that leaves min-stx-out after our fee
-        (min-gross (/ (* min-stx-out BPS) (- BPS (var-get fee-bps))))
-        (gross (try! (contract-call? 'SM1793C4R5PZ4NS4VQ4WMP7SKKYVH8JZEWSZ9HCCR.xyk-core-v-1-2
-                       swap-y-for-x pool stx-token token tokens-in (if (> min-gross u0) min-gross u1))))
-        (fee (fee-of gross))
-        (net (- gross fee))
-      )
-      ;; min on what the user keeps, after our fee
-      (asserts! (>= net min-stx-out) ERR_SLIPPAGE)
-      (try! (pay-fee fee))
-      (print { event: "stxcity-sell-pool", user: tx-sender, pool: (contract-of pool), token: (contract-of token),
-               tokens-in: tokens-in, stx-out: gross, fee: fee })
-      (ok net))))
+    ;; 3. what the user keeps must be at least their min out
+    (asserts! (>= net min-stx-out) ERR_SLIPPAGE)
+    (try! (pay-fee fee))
+    (print { event: "stxcity-sell-pool", user: tx-sender, pool: (contract-of pool), token: (contract-of token),
+             tokens-in: tokens-in, stx-out: stx-out, fee: fee })
+    (ok net)))
 
 ;; ---- owner ------------------------------------------------------------------
 
