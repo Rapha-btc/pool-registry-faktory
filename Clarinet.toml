@@ -257,3 +257,8 @@ epoch = "4.0"
 path = 'contracts/d-rock-arb-faktory-2.clar'
 clarity_version = 5
 epoch = "4.0"
+
+[contracts.stxcity-swap-faktory]
+path = 'contracts/stxcity-swap-faktory.clar'
+clarity_version = 5
+epoch = 'latest'

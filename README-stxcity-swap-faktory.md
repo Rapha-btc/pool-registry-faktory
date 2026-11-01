@@ -1,11 +1,11 @@
-# stxcity-fee-adapter
+# stxcity-swap-faktory
 
 fak.fun front door for STX.CITY tokens (AI DAO launches): takes a fee in STX for
 fak.fun, then trades for the user in the same tx. Never runs as-contract, never
 holds funds; the user's post-conditions bound every transfer.
 
-Source: `contracts/stxcity-fee-adapter.clar`. Deploy bytes (comments stripped,
-`clarinet format`): `contracts/d-stxcity-fee-adapter.clar`. NOT deployed.
+Source: `contracts/stxcity-swap-faktory.clar`. Deploy bytes (comments stripped,
+`clarinet format`): `contracts/d-stxcity-swap-faktory.clar`. NOT deployed.
 
 ## Paths
 
@@ -29,11 +29,11 @@ Errors: `u5001` not owner, `u5002` venue not approved, `u5003` zero amount,
 
 ## Validation (stxer mainnet fork, 2026-11-01)
 
-`node verify-stxcity-fee-adapter.js`, uses the juice node (no Hiro 429).
+`node verify-stxcity-swap-faktory.js`, uses the juice node (no Hiro 429).
 
-- source: **74/74** https://stxer.xyz/simulations/mainnet/ee08145e00f6b98b89c6339cfd2932e8
-- deploy bytes, `SRC=./contracts/d-stxcity-fee-adapter.clar node verify-stxcity-fee-adapter.js`:
-  **74/74** https://stxer.xyz/simulations/mainnet/534d71db78f9afea0752a4916f9c6c96
+- source: **74/74** https://stxer.xyz/simulations/mainnet/81ebd22fb3941bf1f6c7d0a462710c0f
+- deploy bytes, `SRC=./contracts/d-stxcity-swap-faktory.clar node verify-stxcity-swap-faktory.js`:
+  **74/74** https://stxer.xyz/simulations/mainnet/6f2282c96f2fbf1b5829991943ef21ca
 
 Venues: curve `SP2XCME6ED8RERGR9R7YDZW7CA6G3F113Y8JMVA46.canex-stxcity-dex` (not
 graduated); pool `SP2XCME6ED8RERGR9R7YDZW7CA6G3F113Y8JMVA46.xyk-pool-stx-aiearn-v-1-1`
@@ -52,4 +52,4 @@ Covered:
 - fee recipient == user: no transfer, no failure
 
 `simulations/verify-stxcity-fee-adapter.cjs` is an older harness (0.5% fee, Hiro
-reads), superseded by the root `verify-stxcity-fee-adapter.js`.
+reads), superseded by the root `verify-stxcity-swap-faktory.js` (contract was named stxcity-fee-adapter before 2026-11-01).

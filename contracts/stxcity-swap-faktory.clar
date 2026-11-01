@@ -1,4 +1,4 @@
-;; stxcity-fee-adapter
+;; stxcity-swap-faktory
 ;;
 ;; fak.fun front door for STX.CITY tokens (AI DAO launches): takes a fee in STX
 ;; for fak.fun, then trades for the user in the same tx.

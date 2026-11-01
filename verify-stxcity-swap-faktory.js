@@ -1,17 +1,17 @@
-// verify-stxcity-fee-adapter.js
-// Mainnet-fork (stxer) harness for stxcity-fee-adapter (fee 1% default, cap 3%).
+// verify-stxcity-swap-faktory.js
+// Mainnet-fork (stxer) harness for stxcity-swap-faktory (fee 1% default, cap 3%).
 // Venues: canex-stxcity-dex (curve, not graduated), xyk-pool-stx-aiearn-v-1-1
 // (Bitflow, xyk-core-v-1-2). Checks balance deltas (fee recipient exact, user
 // in/out exact, adapter holds 0 STX / 0 tokens after every call), slippage on
 // all three paths ("just above" via quote-in-the-same-eval), guards, owner flow.
 //
-// Run: node verify-stxcity-fee-adapter.js
+// Run: node verify-stxcity-swap-faktory.js
 import fs from "node:fs";
 import { uintCV, boolCV, listCV, contractPrincipalCV, standardPrincipalCV, ClarityVersion, cvToString, deserializeCV } from "@stacks/transactions";
 import { SimulationBuilder, getSimulationResult } from "stxer";
 
 const DEPLOYER = "SPV9K21TBFAK4KNRJXF5DFP8N7W46G4V9RCJDC22";
-const ADAPTER = `${DEPLOYER}.stxcity-fee-adapter`;
+const ADAPTER = `${DEPLOYER}.stxcity-swap-faktory`;
 const PROBE = `${DEPLOYER}.stxcity-adapter-probe`;
 const A = "SP2XCME6ED8RERGR9R7YDZW7CA6G3F113Y8JMVA46";
 const WHALE = "SP3HXJJMJQ06GNAZ8XWDN1QM48JEDC6PP6W3YZPZJ"; // ~1.6M STX
@@ -25,7 +25,7 @@ const NODE = process.env.STACKS_API || "http://77.42.3.101/stacks-api";
 const cp = (id) => { const [a, n] = id.split("."); return contractPrincipalCV(a, n); };
 const fee1 = (x) => (x * 100n) / 10000n;
 
-const SRC = fs.readFileSync(process.env.SRC || "./contracts/stxcity-fee-adapter.clar", "utf8")
+const SRC = fs.readFileSync(process.env.SRC || "./contracts/stxcity-swap-faktory.clar", "utf8")
   .split("\n").filter((l) => !/^\s*;;/.test(l)).map((l) => l.replace(/\s;;.*$/, "")).join("\n");
 // probe: quote + adapter call in ONE tx sent by the user (stxer evals all run as
 // the builder's last sender, so trade cases cannot be evals). A tx err rolls back.
@@ -73,7 +73,7 @@ const adapterCall = (fn, args) => `(contract-call? '${ADAPTER} ${fn} ${args})`;
 const POOLARGS = `'${POOL} '${STX_TOKEN} '${PTOK}`;
 
 // ---- setup ----
-for (const [name, code] of [["stxcity-fee-adapter", SRC], ["stxcity-adapter-probe", PROBE_SRC]]) {
+for (const [name, code] of [["stxcity-swap-faktory", SRC], ["stxcity-adapter-probe", PROBE_SRC]]) {
   b.withSender(DEPLOYER).addContractDeploy({ contract_name: name, source_code: code, clarity_version: ClarityVersion.Clarity5 });
   plan.push({ label: `deploy ${name}`, want: isOk });
 }
